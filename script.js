@@ -367,6 +367,7 @@ class Game {
     document.getElementById('mainMenu').classList.remove('hidden');
     this.otherPlayers.clear();
     this.projectiles = [];
+    this.player = null;
   }
 
   shoot() {
