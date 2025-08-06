@@ -96,10 +96,3 @@ html, body {
     display: block;
   }
 }
-
-/* 電腦版隱藏搖桿 */
-@media (min-width: 769px) {
-  .joystick {
-    display: none !important;
-  }
-}
