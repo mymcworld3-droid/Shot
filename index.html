@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,16 +8,22 @@
   <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+  <!-- 主頁面 -->
   <div id="mainMenu" class="screen">
     <h1>大地圖.io</h1>
     <button id="startBtn" class="start-button">開始遊戲</button>
   </div>
+
+  <!-- 遊戲畫面 -->
   <div id="gameScreen" class="screen hidden">
     <canvas id="gameCanvas"></canvas>
+    
+    <!-- 手機版虛擬搖桿 -->
     <div id="joystick" class="joystick">
       <div id="joystickKnob" class="joystick-knob"></div>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
