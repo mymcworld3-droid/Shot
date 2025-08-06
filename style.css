@@ -1,14 +1,17 @@
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 html, body {
   height: 100%;
   width: 100%;
   font-family: 'Arial', sans-serif;
   overflow: hidden;
 }
+
 .screen {
   position: absolute;
   top: 0;
@@ -20,18 +23,23 @@ html, body {
   justify-content: center;
   align-items: center;
 }
+
 .hidden {
   display: none !important;
 }
+
+/* 主頁面樣式 */
 #mainMenu {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
+
 #mainMenu h1 {
   font-size: 3rem;
   margin-bottom: 2rem;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
+
 .start-button {
   padding: 15px 30px;
   font-size: 1.5rem;
@@ -42,16 +50,22 @@ html, body {
   cursor: pointer;
   transition: background 0.3s;
 }
+
 .start-button:hover {
   background: #45a049;
 }
+
+/* 遊戲畫面樣式 */
 #gameScreen {
   background: #2c3e50;
 }
+
 #gameCanvas {
   background: #34495e;
   border: 2px solid #2c3e50;
 }
+
+/* 虛擬搖桿樣式 */
 .joystick {
   position: absolute;
   bottom: 50px;
@@ -63,6 +77,7 @@ html, body {
   border-radius: 50%;
   display: none;
 }
+
 .joystick-knob {
   position: absolute;
   top: 50%;
@@ -74,11 +89,15 @@ html, body {
   transform: translate(-50%, -50%);
   transition: all 0.1s ease;
 }
+
+/* 手機版顯示搖桿 */
 @media (max-width: 768px) {
   .joystick {
     display: block;
   }
 }
+
+/* 電腦版隱藏搖桿 */
 @media (min-width: 769px) {
   .joystick {
     display: none !important;
