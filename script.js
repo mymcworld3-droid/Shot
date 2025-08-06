@@ -10,7 +10,7 @@ class Game {
     this.otherPlayers = new Map();
     this.projectiles = [];
     this.isRunning = false;
-    this.isMobile = window.innerWidth <= 768;
+    this.isMobile = true;
     this.playerId = Math.random().toString(36).substr(2, 9);
     this.socket = null;
     this.gridSize = 50;
