@@ -1,4 +1,7 @@
 
+const wsUrl = `wss://${window.location.host}`;
+this.socket = new WebSocket(wsUrl);
+
 class Game {
   constructor() {
     this.canvas = null;
