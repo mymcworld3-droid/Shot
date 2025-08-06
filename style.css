@@ -75,7 +75,7 @@ html, body {
   background: rgba(255, 255, 255, 0.2);
   border: 3px solid rgba(255, 255, 255, 0.4);
   border-radius: 50%;
-  display: none;
+  display: block;
 }
 
 .joystick-knob {
@@ -88,11 +88,4 @@ html, body {
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: all 0.1s ease;
-}
-
-/* 手機版顯示搖桿 */
-@media (max-width: 768px) {
-  .joystick {
-    display: block;
-  }
 }
