@@ -418,22 +418,23 @@ class Game {
   }
 
   render() {
-    // 清除畫布
-    this.ctx.fillStyle = '#34495e';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    // 繪製網格
-    this.drawGrid();
-    
-    // 繪製玩家
+  // 清除畫布
+  this.ctx.fillStyle = '#34495e';
+  this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  
+  // 繪製網格
+  this.drawGrid();
+  
+  // 繪製玩家
+  if (this.player) {
     this.player.render(this.ctx);
-    
-    // 繪製其他玩家
-    this.otherPlayers.forEach(player => player.render(this.ctx));
-    
-    // 繪製圓球
-    this.projectiles.forEach(proj => proj.render(this.ctx));
   }
+
+  // 繪製其他玩家
+  this.otherPlayers.forEach(player => player.render(this.ctx));
+  
+  // 繪製圓球
+  this.projectiles.forEach(proj => proj.render(this.ctx));
 }
 
 class Player {
