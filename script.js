@@ -1,0 +1,1 @@
+// 🔧 將你的 Game 類別 JavaScript 程式碼貼到這裡
