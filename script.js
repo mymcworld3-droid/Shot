@@ -436,7 +436,7 @@ class Game {
     // 繪製圓球
     this.projectiles.forEach(proj => proj.render(this.ctx));
   }
-
+}
 class Player {
   constructor(x, y, color = '#3498db') {
     this.x = x;
