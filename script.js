@@ -168,32 +168,34 @@ class Game {
   setupTouchControls() {
     const joystick = document.getElementById('joystick');
     const knob = document.getElementById('joystickKnob');
-
     let touchId = null;
 
-    joystick.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      touchId = touch.identifier;
-      
-      const rect = joystick.getBoundingClientRect();
-      this.joystick.startX = rect.left + rect.width / 2;
-      this.joystick.startY = rect.top + rect.height / 2;
-      this.joystick.currentX = touch.clientX;
-      this.joystick.currentY = touch.clientY;
-      this.joystick.active = true;
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        touchId = touch.identifier;
+
+        // 設定起點
+        this.joystick.startX = touch.clientX;
+        this.joystick.startY = touch.clientY;
+        this.joystick.currentX = touch.clientX;
+        this.joystick.currentY = touch.clientY;
+        this.joystick.active = true;
+
+        // 顯示搖桿
+        joystick.style.display = 'block';
+        joystick.style.left = `${touch.clientX - 60}px`; // 120 / 2
+        joystick.style.top = `${touch.clientY - 60}px`;
+      }
     });
 
     document.addEventListener('touchmove', (e) => {
-      if (!this.joystick.active) return;
-      
       for (let touch of e.touches) {
-        if (touch.identifier === touchId) {
-          e.preventDefault();
+        if (touch.identifier === touchId && this.joystick.active) {
           this.joystick.currentX = touch.clientX;
           this.joystick.currentY = touch.clientY;
           this.updateJoystickKnob(knob);
-          break;
+          e.preventDefault();
         }
       }
     });
@@ -203,19 +205,19 @@ class Game {
         if (touch.identifier === touchId) {
           this.joystick.active = false;
           touchId = null;
-          
-          // 發射圓球
-          if (this.isRunning) {
-            this.shoot();
-          }
-          
-          // 重置搖桿
+
           knob.style.transform = 'translate(-50%, -50%)';
+          joystick.style.display = 'none';
+
+          if (this.isRunning) {
+            this.shoot(); // 可選
+          }
           break;
         }
       }
     });
   }
+
 
   updateJoystickKnob(knob) {
     const deltaX = this.joystick.currentX - this.joystick.startX;
