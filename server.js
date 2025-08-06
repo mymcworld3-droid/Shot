@@ -1,3 +1,4 @@
+
 const WebSocket = require('ws');
 const http = require('http');
 const fs = require('fs');
@@ -7,16 +8,16 @@ const path = require('path');
 const server = http.createServer((req, res) => {
   let filePath = '.' + req.url;
   if (filePath === './') filePath = './index.html';
-
+  
   const extname = String(path.extname(filePath)).toLowerCase();
   const mimeTypes = {
     '.html': 'text/html',
     '.js': 'text/javascript',
     '.css': 'text/css'
   };
-
+  
   const contentType = mimeTypes[extname] || 'application/octet-stream';
-
+  
   fs.readFile(filePath, (error, content) => {
     if (error) {
       if (error.code === 'ENOENT') {
@@ -42,13 +43,14 @@ const projectiles = [];
 
 wss.on('connection', (ws) => {
   console.log('新玩家連接');
-
+  
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
-
+      
       switch (data.type) {
         case 'playerJoin':
+          // 新玩家加入
           players.set(data.playerId, {
             id: data.playerId,
             x: data.x,
@@ -57,6 +59,8 @@ wss.on('connection', (ws) => {
             directionY: 0,
             ws: ws
           });
+          
+          // 發送當前所有玩家給新玩家
           ws.send(JSON.stringify({
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
@@ -67,6 +71,8 @@ wss.on('connection', (ws) => {
               directionY: p.directionY
             }))
           }));
+          
+          // 通知其他玩家有新玩家加入
           broadcast({
             type: 'playerJoined',
             player: {
@@ -78,14 +84,17 @@ wss.on('connection', (ws) => {
             }
           }, data.playerId);
           break;
-
+          
         case 'playerUpdate':
+          // 更新玩家位置
           if (players.has(data.playerId)) {
             const player = players.get(data.playerId);
             player.x = data.x;
             player.y = data.y;
             player.directionX = data.directionX;
             player.directionY = data.directionY;
+            
+            // 廣播玩家位置更新
             broadcast({
               type: 'playerUpdate',
               player: {
@@ -98,8 +107,9 @@ wss.on('connection', (ws) => {
             }, data.playerId);
           }
           break;
-
+          
         case 'shoot':
+          // 處理射擊
           const projectile = {
             id: Math.random().toString(36).substr(2, 9),
             x: data.x,
@@ -109,18 +119,24 @@ wss.on('connection', (ws) => {
             playerId: data.playerId,
             speed: 10
           };
+          
           projectiles.push(projectile);
+          
+          // 廣播新的圓球
           broadcast({
             type: 'projectileCreated',
             projectile: projectile
           });
           break;
-
+          
         case 'playerHit':
+          // 玩家被擊中
           broadcast({
             type: 'playerHit',
             playerId: data.playerId
           });
+          
+          // 移除被擊中的玩家
           players.delete(data.playerId);
           break;
       }
@@ -128,8 +144,9 @@ wss.on('connection', (ws) => {
       console.error('處理訊息錯誤:', error);
     }
   });
-
+  
   ws.on('close', () => {
+    // 玩家斷線，移除玩家
     for (let [playerId, player] of players) {
       if (player.ws === ws) {
         players.delete(playerId);
@@ -144,6 +161,7 @@ wss.on('connection', (ws) => {
   });
 });
 
+// 廣播訊息給所有玩家（除了發送者）
 function broadcast(message, excludePlayerId = null) {
   const messageStr = JSON.stringify(message);
   players.forEach((player, playerId) => {
@@ -153,11 +171,14 @@ function broadcast(message, excludePlayerId = null) {
   });
 }
 
+// 更新圓球位置
 setInterval(() => {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const proj = projectiles[i];
     proj.x += proj.directionX * proj.speed;
     proj.y += proj.directionY * proj.speed;
+    
+    // 移除超出邊界的圓球（假設地圖大小為 2000x2000）
     if (proj.x < 0 || proj.x > 2000 || proj.y < 0 || proj.y > 2000) {
       projectiles.splice(i, 1);
       broadcast({
@@ -166,13 +187,15 @@ setInterval(() => {
       });
     }
   }
+  
+  // 廣播圓球位置更新
   if (projectiles.length > 0) {
     broadcast({
       type: 'projectilesUpdate',
       projectiles: projectiles
     });
   }
-}, 50);
+}, 50); // 每 50ms 更新一次
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
