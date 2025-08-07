@@ -319,11 +319,11 @@ class Game {
   render() {
     const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
     const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
-    this.ctx.fillStyle = '#34495e';
+    this.ctx.fillStyle = '#2c3e50';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.ctx.translate(-camX, -camY);
-    this.ctx.fillStyle = '#2c3e50';
+    this.ctx.fillStyle = '#34495e';
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
     if (this.player) this.player.render(this.ctx);
