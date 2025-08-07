@@ -134,7 +134,7 @@ wss.on('connection', (ws) => {
           broadcast({
             type: 'playerHit',
             playerId: data.playerId
-          });
+          },null);
           
           // 移除被擊中的玩家
           players.delete(data.playerId);
