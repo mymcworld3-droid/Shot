@@ -409,23 +409,18 @@ class Game {
     this.ctx.strokeStyle = '#2c3e50';
     this.ctx.lineWidth = 1;
     this.ctx.globalAlpha = 0.3;
-
-    // 繪製垂直線
-    for (let x = 0; x <= this.canvas.width; x += this.gridSize) {
+    for (let x = 0; x <= this.mapWidth; x += this.gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.lineTo(x, this.mapHeight);
       this.ctx.stroke();
     }
-
-    // 繪製水平線
-    for (let y = 0; y <= this.canvas.height; y += this.gridSize) {
+    for (let y = 0; y <= this.mapHeight; y += this.gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.canvas.width, y);
+      this.ctx.lineTo(this.mapWidth, y);
       this.ctx.stroke();
     }
-
     this.ctx.globalAlpha = 1;
   }
 
