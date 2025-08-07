@@ -52,13 +52,13 @@ class Game {
       case 'currentPlayers':
         data.players.forEach(playerData => {
           if (playerData.id !== this.playerId) {
-            this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22'));
+            this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22', playerData.id));
           }
         });
         break;
       case 'playerJoined':
         if (data.player.id !== this.playerId) {
-          this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22'));
+          this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22', data.player.id));
         }
         break;
       case 'playerUpdate':
@@ -178,7 +178,7 @@ class Game {
       : Math.random().toString(36).substr(2, 9);
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    this.player = new Player(this.mapWidth / 2, this.mapHeight / 2, '#3498db');
+    this.player = new Player(this.mapWidth / 2, this.mapHeight / 2, '#3498db',this.playerId);
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
@@ -346,6 +346,7 @@ class Player {
     this.color = color;
     this.directionX = 0;
     this.directionY = 0;
+    this.id = id;
   }
 
   move(dx, dy) {
@@ -383,6 +384,12 @@ class Player {
       this.y + this.directionY * this.radius * 1.5
     );
     ctx.stroke();
+    if (this.id) {
+      ctx.fillStyle = 'white';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.id, this.x, this.y - this.radius - 10);
+    }
   }
 }
 
