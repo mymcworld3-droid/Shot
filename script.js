@@ -85,6 +85,7 @@ class Game {
         if (data.playerId === this.playerId) {
           this.playerHit();
         } else {
+          console.log('刪除玩家:', data.playerId);
           this.otherPlayers.delete(data.playerId);
           this.render(); // ✅ 立刻重繪畫面（清掉那個人）  
         }
