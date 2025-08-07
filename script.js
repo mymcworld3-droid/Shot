@@ -319,11 +319,13 @@ class Game {
   render() {
     const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
     const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
-    this.ctx.fillStyle = '#2c3e50';
+    // 畫「外框」→ 畫整個畫布（畫面背景）
+    this.ctx.fillStyle = '#34495e'; // 外框色（畫布整體）
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.ctx.translate(-camX, -camY);
-    this.ctx.fillStyle = '#34495e';
+    // 畫「地圖」→ 地圖範圍內（置中玩家）
+    this.ctx.fillStyle = '#2c3e50'; // 地圖內部顏色
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
     if (this.player) this.player.render(this.ctx);
