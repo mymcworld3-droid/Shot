@@ -130,28 +130,28 @@ wss.on('connection', (ws) => {
           break;
           
         case 'playerHit': {
-  const victimId = data.playerId;
+          const victimId = data.playerId;
 
-        // 廣播死亡訊息給所有人
-        broadcast({
-          type: 'playerHit',
-          playerId: victimId
-        });
-
-        // 通知自己（被殺的玩家）也死了
-        const victim = players.get(victimId);
-        if (victim && victim.ws.readyState === WebSocket.OPEN) {
-          victim.ws.send(JSON.stringify({
+          // 廣播死亡訊息給所有人
+          broadcast({
             type: 'playerHit',
             playerId: victimId
-          }));
+          });
+
+          // 通知自己（被殺的玩家）也死了
+          const victim = players.get(victimId);
+          if (victim && victim.ws.readyState === WebSocket.OPEN) {
+            victim.ws.send(JSON.stringify({
+              type: 'playerHit',
+              playerId: victimId
+            }));
+          }
+
+          // 從伺服器移除該玩家
+          players.delete(victimId);
+          break;
         }
-
-        // 從伺服器移除該玩家
-        players.delete(victimId);
-        break;
-      }
-
+      }     
     } catch (error) {
       console.error('處理訊息錯誤:', error);
     }
