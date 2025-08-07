@@ -82,8 +82,12 @@ class Game {
         }
         break;
       case 'playerHit':
-        if (data.playerId === this.playerId) this.playerHit();
-        else this.otherPlayers.delete(data.playerId);
+        if (data.playerId === this.playerId) {
+          this.playerHit();
+        } else {
+          this.otherPlayers.delete(data.playerId);
+          this.render(); // ✅ 立刻重繪畫面（清掉那個人）  
+        }
         break;
     }
   }
@@ -332,7 +336,9 @@ class Game {
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
     if (this.player) this.player.render(this.ctx);
-    this.otherPlayers.forEach(p => p.render(this.ctx));
+    for (let [id, player] of this.otherPlayers.entries()) {
+      if (player) player.render(this.ctx);
+    }
     this.projectiles.forEach(p => p.render(this.ctx));
     this.ctx.restore();
   }
