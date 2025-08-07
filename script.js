@@ -469,9 +469,11 @@ class Player {
     this.y += deltaY;
     
     // 邊界檢查
-    const canvas = document.getElementById('gameCanvas');
-    this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
-    this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
+    const game = window.game; // ❗️你可以改為 constructor 傳入 Game 物件
+    if (game) {
+      this.x = Math.max(this.radius, Math.min(game.mapWidth - this.radius, this.x));
+      this.y = Math.max(this.radius, Math.min(game.mapHeight - this.radius, this.y));
+    }
   }
 
   setDirection(deltaX, deltaY) {
