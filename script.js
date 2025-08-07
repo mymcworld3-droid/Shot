@@ -300,7 +300,7 @@ class Game {
         const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
         if (length > 0) {
-          const maxSpeed = 5; // 🎯 設定移動速度上限
+          const maxSpeed = 10; // 🎯 設定移動速度上限
           const normalizedX = deltaX / length;
           const normalizedY = deltaY / length;
           const speed = Math.min(length * 0.1, maxSpeed); // 距離轉速度，但上限為 maxSpeed
