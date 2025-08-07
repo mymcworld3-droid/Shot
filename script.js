@@ -339,7 +339,7 @@ class Game {
 }
 
 class Player {
-  constructor(x, y, color = '#3498db') {
+  constructor(x, y, color = '#3498db',id='') {
     this.x = x;
     this.y = y;
     this.radius = 20;
