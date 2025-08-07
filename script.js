@@ -296,9 +296,17 @@ class Game {
       if (this.joystick.active) {
         const deltaX = this.joystick.currentX - this.joystick.startX;
         const deltaY = this.joystick.currentY - this.joystick.startY;
-        
-        this.player.move(deltaX * 0.1, deltaY * 0.1);
-        this.player.setDirection(deltaX, deltaY);
+
+        const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (length > 0) {
+          const maxSpeed = 5; // 🎯 設定移動速度上限
+          const normalizedX = deltaX / length;
+          const normalizedY = deltaY / length;
+
+          this.player.move(normalizedX * maxSpeed, normalizedY * maxSpeed);
+          this.player.setDirection(deltaX, deltaY);
+        }
       }
     } else {
       // 電腦版控制
