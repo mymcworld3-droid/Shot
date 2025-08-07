@@ -1,4 +1,4 @@
-
+// ✅ Fixed map support with camera movement and boundary constraints
 const wsUrl = `wss://${window.location.host}`;
 this.socket = new WebSocket(wsUrl);
 
@@ -9,15 +9,13 @@ class Game {
     this.player = null;
     this.otherPlayers = new Map();
     this.projectiles = [];
-    this.mapWidth = 2000;     // ✅ 固定地圖寬度
+    this.mapWidth = 2000;
     this.mapHeight = 2000;
     this.isRunning = false;
     this.isMobile = true;
     this.playerId = Math.random().toString(36).substr(2, 9);
     this.socket = null;
     this.gridSize = 50;
-    
-    // 輸入控制
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
     this.joystick = {
@@ -27,7 +25,6 @@ class Game {
       currentX: 0,
       currentY: 0
     };
-    
     this.init();
   }
 
@@ -38,30 +35,14 @@ class Game {
   }
 
   initSocket() {
-    // 連接到 WebSocket 伺服器
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
-    
     try {
       this.socket = new WebSocket(wsUrl);
-      
-      this.socket.onopen = () => {
-        console.log('已連接到伺服器');
-      };
-      
-      this.socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        this.handleServerMessage(data);
-      };
-      
-      this.socket.onclose = () => {
-        console.log('與伺服器連接斷開');
-        this.socket = null;
-      };
-      
-      this.socket.onerror = (error) => {
-        console.error('WebSocket 錯誤:', error);
-      };
+      this.socket.onopen = () => console.log('已連接到伺服器');
+      this.socket.onmessage = (event) => this.handleServerMessage(JSON.parse(event.data));
+      this.socket.onclose = () => { console.log('與伺服器連接斷開'); this.socket = null; };
+      this.socket.onerror = (error) => console.error('WebSocket 錯誤:', error);
     } catch (error) {
       console.error('無法連接到伺服器:', error);
     }
@@ -70,47 +51,27 @@ class Game {
   handleServerMessage(data) {
     switch (data.type) {
       case 'currentPlayers':
-        // 接收當前所有玩家
         data.players.forEach(playerData => {
           if (playerData.id !== this.playerId) {
-            this.otherPlayers.set(playerData.id, new Player(
-              playerData.x,
-              playerData.y,
-              '#e67e22'
-            ));
+            this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22'));
           }
         });
         break;
-        
       case 'playerJoined':
-        // 新玩家加入
         if (data.player.id !== this.playerId) {
-          this.otherPlayers.set(data.player.id, new Player(
-            data.player.x,
-            data.player.y,
-            '#e67e22'
-          ));
+          this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22'));
         }
         break;
-        
       case 'playerUpdate':
-        // 更新其他玩家位置
         if (data.player.id !== this.playerId && this.otherPlayers.has(data.player.id)) {
           const player = this.otherPlayers.get(data.player.id);
-          player.x = data.player.x;
-          player.y = data.player.y;
-          player.directionX = data.player.directionX;
-          player.directionY = data.player.directionY;
+          Object.assign(player, data.player);
         }
         break;
-        
       case 'playerLeft':
-        // 玩家離開
         this.otherPlayers.delete(data.playerId);
         break;
-        
       case 'projectileCreated':
-        // 新的圓球
         if (data.projectile.playerId !== this.playerId) {
           this.projectiles.push(new Projectile(
             data.projectile.x,
@@ -121,49 +82,37 @@ class Game {
           ));
         }
         break;
-        
       case 'playerHit':
-        // 玩家被擊中
-        if (data.playerId === this.playerId) {
-          this.playerHit();
-        } else {
-          this.otherPlayers.delete(data.playerId);
-        }
+        if (data.playerId === this.playerId) this.playerHit();
+        else this.otherPlayers.delete(data.playerId);
         break;
     }
   }
 
+  setupCanvas() {
+    this.canvas = document.getElementById('gameCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.resizeCanvas();
+    window.addEventListener('resize', () => this.resizeCanvas());
+  }
+
+  resizeCanvas() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
   setupEventListeners() {
-    // 開始按鈕
-    document.getElementById('startBtn').addEventListener('click', () => {
-      this.startGame();
-    });
-
-    // 鍵盤事件
-    document.addEventListener('keydown', (e) => {
-      this.keys[e.key.toLowerCase()] = true;
-    });
-
-    document.addEventListener('keyup', (e) => {
-      this.keys[e.key.toLowerCase()] = false;
-    });
-
-    // 滑鼠事件
+    document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+    document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
+    document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);
     document.addEventListener('mousemove', (e) => {
-      const rect = this.canvas?.getBoundingClientRect();
-      if (rect) {
-        this.mousePos.x = e.clientX - rect.left;
-        this.mousePos.y = e.clientY - rect.top;
-      }
+      const rect = this.canvas.getBoundingClientRect();
+      this.mousePos.x = e.clientX - rect.left;
+      this.mousePos.y = e.clientY - rect.top;
     });
-
     document.addEventListener('click', (e) => {
-      if (this.isRunning && !this.isMobile) {
-        this.shoot();
-      }
+      if (this.isRunning && !this.isMobile) this.shoot();
     });
-
-    // 觸控事件（手機版搖桿）
     this.setupTouchControls();
   }
 
@@ -176,17 +125,11 @@ class Game {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         touchId = touch.identifier;
-
-        // 設定起點
-        this.joystick.startX = touch.clientX;
-        this.joystick.startY = touch.clientY;
-        this.joystick.currentX = touch.clientX;
-        this.joystick.currentY = touch.clientY;
+        this.joystick.startX = this.joystick.currentX = touch.clientX;
+        this.joystick.startY = this.joystick.currentY = touch.clientY;
         this.joystick.active = true;
-
-        // 顯示搖桿
         joystick.style.display = 'block';
-        joystick.style.left = `${touch.clientX - 60}px`; // 120 / 2
+        joystick.style.left = `${touch.clientX - 60}px`;
         joystick.style.top = `${touch.clientY - 60}px`;
       }
     });
@@ -207,63 +150,35 @@ class Game {
         if (touch.identifier === touchId) {
           this.joystick.active = false;
           touchId = null;
-
           knob.style.transform = 'translate(-50%, -50%)';
           joystick.style.display = 'none';
-
-          if (this.isRunning) {
-            this.shoot(); // 可選
-          }
+          if (this.isRunning) this.shoot();
           break;
         }
       }
     });
   }
 
-
   updateJoystickKnob(knob) {
     const deltaX = this.joystick.currentX - this.joystick.startX;
     const deltaY = this.joystick.currentY - this.joystick.startY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     const maxDistance = 40;
-
     if (distance <= maxDistance) {
       knob.style.transform = `translate(${deltaX - 20}px, ${deltaY - 20}px)`;
     } else {
       const angle = Math.atan2(deltaY, deltaX);
-      const limitedX = Math.cos(angle) * maxDistance;
-      const limitedY = Math.sin(angle) * maxDistance;
-      knob.style.transform = `translate(${limitedX - 20}px, ${limitedY - 20}px)`;
-    }
-  }
-
-  setupCanvas() {
-    this.canvas = document.getElementById('gameCanvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.resizeCanvas();
-    
-    window.addEventListener('resize', () => {
-      this.resizeCanvas();
-    });
-  }
-
-  resizeCanvas() {
-    if (this.canvas) {
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
+      knob.style.transform = `translate(${Math.cos(angle) * maxDistance - 20}px, ${Math.sin(angle) * maxDistance - 20}px)`;
     }
   }
 
   startGame() {
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    
-    this.player = new Player(this.canvas.width / 2, this.canvas.height / 2, '#3498db');
+    this.player = new Player(this.mapWidth / 2, this.mapHeight / 2, '#3498db');
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
-    
-    // 通知伺服器玩家加入
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
@@ -272,16 +187,13 @@ class Game {
         y: this.player.y
       }));
     }
-    
     this.gameLoop();
   }
 
   gameLoop() {
     if (!this.isRunning) return;
-    
     this.update();
     this.render();
-    
     requestAnimationFrame(() => this.gameLoop());
   }
 
@@ -293,42 +205,30 @@ class Game {
   }
 
   updatePlayer() {
-    if (this.isMobile) {
-      // 手機版控制
-      if (this.joystick.active) {
-        const deltaX = this.joystick.currentX - this.joystick.startX;
-        const deltaY = this.joystick.currentY - this.joystick.startY;
-
-        const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        if (length > 0) {
-          const maxSpeed = 8; // 🎯 設定移動速度上限
-          const normalizedX = deltaX / length;
-          const normalizedY = deltaY / length;
-          const speed = Math.min(length * 0.1, maxSpeed); // 距離轉速度，但上限為 maxSpeed
-          this.player.move(normalizedX * speed, normalizedY * speed);
-          this.player.setDirection(deltaX, deltaY);
-        }
+    if (!this.player) return;
+    if (this.isMobile && this.joystick.active) {
+      const dx = this.joystick.currentX - this.joystick.startX;
+      const dy = this.joystick.currentY - this.joystick.startY;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        const maxSpeed = 8;
+        const normX = dx / len;
+        const normY = dy / len;
+        const speed = Math.min(len * 0.1, maxSpeed);
+        this.player.move(normX * speed, normY * speed);
+        this.player.setDirection(dx, dy);
       }
     } else {
-      // 電腦版控制
-      let moveX = 0;
-      let moveY = 0;
-      
-      if (this.keys['w'] || this.keys['arrowup']) moveY -= 1;
-      if (this.keys['s'] || this.keys['arrowdown']) moveY += 1;
-      if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
-      if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
-      
-      this.player.move(moveX * 5, moveY * 5);
-      
-      // 面朝滑鼠方向
-      const deltaX = this.mousePos.x - this.player.x;
-      const deltaY = this.mousePos.y - this.player.y;
-      this.player.setDirection(deltaX, deltaY);
+      let mx = 0, my = 0;
+      if (this.keys['w'] || this.keys['arrowup']) my -= 1;
+      if (this.keys['s'] || this.keys['arrowdown']) my += 1;
+      if (this.keys['a'] || this.keys['arrowleft']) mx -= 1;
+      if (this.keys['d'] || this.keys['arrowright']) mx += 1;
+      this.player.move(mx * 5, my * 5);
+      const dx = this.mousePos.x - this.player.x;
+      const dy = this.mousePos.y - this.player.y;
+      this.player.setDirection(dx, dy);
     }
-
-    // 發送玩家位置給伺服器
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'playerUpdate',
@@ -341,31 +241,23 @@ class Game {
     }
   }
 
-  updateOtherPlayers() {
-    // 其他玩家的更新將透過 WebSocket 接收
-  }
+  updateOtherPlayers() {}
 
   updateProjectiles() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
       proj.update();
-      
-      // 移除超出邊界的圓球
-      if (proj.x < 0 || proj.x > this.canvas.width || 
-          proj.y < 0 || proj.y > this.canvas.height) {
+      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight) {
         this.projectiles.splice(i, 1);
       }
     }
   }
 
   checkCollisions() {
-    // 檢查玩家被擊中
     for (let proj of this.projectiles) {
       if (proj.playerId !== this.playerId) {
-        const distance = Math.sqrt(
-          (proj.x - this.player.x) ** 2 + (proj.y - this.player.y) ** 2
-        );
-        if (distance < this.player.radius + proj.radius) {
+        const dist = Math.sqrt((proj.x - this.player.x) ** 2 + (proj.y - this.player.y) ** 2);
+        if (dist < this.player.radius + proj.radius) {
           this.playerHit();
           return;
         }
@@ -384,15 +276,13 @@ class Game {
 
   shoot() {
     const projectile = new Projectile(
-      this.player.x, 
-      this.player.y, 
-      this.player.directionX, 
+      this.player.x,
+      this.player.y,
+      this.player.directionX,
       this.player.directionY,
       this.playerId
     );
     this.projectiles.push(projectile);
-    
-    // 發送射擊到伺服器
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'shoot',
@@ -425,30 +315,22 @@ class Game {
   }
 
   render() {
-    // 🎥 攝影機座標：讓玩家在畫面中心
-    const cameraX = this.player.x - this.canvas.width / 2;
-    const cameraY = this.player.y - this.canvas.height / 2;
-
-    // 清除畫布
+    const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
+    const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
     this.ctx.fillStyle = '#34495e';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.ctx.save();
-    this.ctx.translate(-cameraX, -cameraY); // 🎯 平移世界座標
-
-    // 繪製地圖背景
+    this.ctx.translate(-camX, -camY);
     this.ctx.fillStyle = '#2c3e50';
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
-
     this.drawGrid();
-
     if (this.player) this.player.render(this.ctx);
     this.otherPlayers.forEach(p => p.render(this.ctx));
     this.projectiles.forEach(p => p.render(this.ctx));
-
     this.ctx.restore();
   }
 }
+
 class Player {
   constructor(x, y, color = '#3498db') {
     this.x = x;
@@ -459,39 +341,32 @@ class Player {
     this.directionY = 0;
   }
 
-  move(deltaX, deltaY) {
-    this.x += deltaX;
-    this.y += deltaY;
-    
-    // 邊界檢查
-    const game = window.game; // ❗️你可以改為 constructor 傳入 Game 物件
+  move(dx, dy) {
+    this.x += dx;
+    this.y += dy;
+    const game = window.game;
     if (game) {
       this.x = Math.max(this.radius, Math.min(game.mapWidth - this.radius, this.x));
       this.y = Math.max(this.radius, Math.min(game.mapHeight - this.radius, this.y));
     }
   }
 
-  setDirection(deltaX, deltaY) {
-    const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    if (length > 0) {
-      this.directionX = deltaX / length;
-      this.directionY = deltaY / length;
+  setDirection(dx, dy) {
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0) {
+      this.directionX = dx / len;
+      this.directionY = dy / len;
     }
   }
 
   render(ctx) {
-    // 繪製玩家圓形
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // 繪製邊框
     ctx.strokeStyle = '#2c3e50';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
-    // 繪製方向指示器
     ctx.strokeStyle = '#2c3e50';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -526,13 +401,10 @@ class Projectile {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // 繪製邊框
     ctx.strokeStyle = '#c0392b';
     ctx.lineWidth = 1;
     ctx.stroke();
   }
 }
 
-// 初始化遊戲
-const game = new Game();
+window.game = new Game();
