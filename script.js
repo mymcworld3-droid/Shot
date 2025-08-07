@@ -39,7 +39,10 @@ class Game {
     try {
       this.socket = new WebSocket(wsUrl);
       this.socket.onopen = () => console.log('已連接到伺服器');
-      this.socket.onmessage = (event) => this.handleServerMessage(JSON.parse(event.data));
+      this.socket.onmessage = (event) => {
+        console.log('[Client] 收到訊息：', event.data); // ✅ 加這行
+        this.handleServerMessage(JSON.parse(event.data));
+      };
       this.socket.onclose = () => { console.log('與伺服器連接斷開'); this.socket = null; };
       this.socket.onerror = (error) => console.error('WebSocket 錯誤:', error);
     } catch (error) {
