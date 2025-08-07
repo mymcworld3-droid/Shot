@@ -9,6 +9,8 @@ class Game {
     this.player = null;
     this.otherPlayers = new Map();
     this.projectiles = [];
+    this.mapWidth = 2000;     // ✅ 固定地圖寬度
+    this.mapHeight = 2000;
     this.isRunning = false;
     this.isMobile = true;
     this.playerId = Math.random().toString(36).substr(2, 9);
