@@ -430,23 +430,28 @@ class Game {
   }
 
   render() {
+    // 🎥 攝影機座標：讓玩家在畫面中心
+    const cameraX = this.player.x - this.canvas.width / 2;
+    const cameraY = this.player.y - this.canvas.height / 2;
+
     // 清除畫布
     this.ctx.fillStyle = '#34495e';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  
-    // 繪製網格
-    this.drawGrid();
-  
-    // 繪製玩家
-    if (this.player) {
-      this.player.render(this.ctx);
-    }
 
-    // 繪製其他玩家
-    this.otherPlayers.forEach(player => player.render(this.ctx));
-  
-    // 繪製圓球
-    this.projectiles.forEach(proj => proj.render(this.ctx));
+    this.ctx.save();
+    this.ctx.translate(-cameraX, -cameraY); // 🎯 平移世界座標
+
+    // 繪製地圖背景
+    this.ctx.fillStyle = '#2c3e50';
+    this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
+
+    this.drawGrid();
+
+    if (this.player) this.player.render(this.ctx);
+    this.otherPlayers.forEach(p => p.render(this.ctx));
+    this.projectiles.forEach(p => p.render(this.ctx));
+
+    this.ctx.restore();
   }
 }
 class Player {
