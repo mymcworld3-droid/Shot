@@ -298,9 +298,9 @@ class Game {
   }
 
   drawGrid() {
-    this.ctx.strokeStyle = '#2c3e50';
+    this.ctx.strokeStyle = '#ffffff';
     this.ctx.lineWidth = 1;
-    this.ctx.globalAlpha = 0.3;
+    this.ctx.globalAlpha = 0.06;
     for (let x = 0; x <= this.mapWidth; x += this.gridSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
