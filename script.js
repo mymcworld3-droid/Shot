@@ -206,17 +206,19 @@ class Game {
 
   updatePlayer() {
     if (!this.player) return;
-    if (this.isMobile && this.joystick.active) {
-      const dx = this.joystick.currentX - this.joystick.startX;
-      const dy = this.joystick.currentY - this.joystick.startY;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      if (len > 0) {
-        const maxSpeed = 8;
-        const normX = dx / len;
-        const normY = dy / len;
-        const speed = Math.min(len * 0.1, maxSpeed);
-        this.player.move(normX * speed, normY * speed);
-        this.player.setDirection(dx, dy);
+    if (this.isMobile) {
+      if (this.joystick.active){
+        const dx = this.joystick.currentX - this.joystick.startX;
+        const dy = this.joystick.currentY - this.joystick.startY;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len > 0) {
+          const maxSpeed = 8;
+          const normX = dx / len; 
+          const normY = dy / len;
+          const speed = Math.min(len * 0.1, maxSpeed);
+          this.player.move(normX * speed, normY * speed);
+          this.player.setDirection(dx, dy);
+        } 
       }
     } else {
       let mx = 0, my = 0;
