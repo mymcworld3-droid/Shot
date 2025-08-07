@@ -13,7 +13,10 @@ class Game {
     this.mapHeight = 2000;
     this.isRunning = false;
     this.isMobile = true;
-    this.playerId = Math.random().toString(36).substr(2, 9);
+    const input = document.getElementById('playerIdInput');
+    this.playerId = input && input.value.trim() !== ''
+      ? input.value.trim()
+      : Math.random().toString(36).substr(2, 9);
     this.socket = null;
     this.gridSize = 50;
     this.keys = {};
