@@ -13,10 +13,6 @@ class Game {
     this.mapHeight = 2000;
     this.isRunning = false;
     this.isMobile = true;
-    const input = document.getElementById('playerIdInput');
-    this.playerId = input && input.value.trim() !== ''
-      ? input.value.trim()
-      : Math.random().toString(36).substr(2, 9);
     this.socket = null;
     this.gridSize = 50;
     this.keys = {};
@@ -176,6 +172,10 @@ class Game {
   }
 
   startGame() {
+    const input = document.getElementById('playerIdInput');
+    this.playerId = input && input.value.trim() !== ''
+      ? input.value.trim()
+      : Math.random().toString(36).substr(2, 9);
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
     this.player = new Player(this.mapWidth / 2, this.mapHeight / 2, '#3498db');
