@@ -303,8 +303,8 @@ class Game {
           const maxSpeed = 5; // 🎯 設定移動速度上限
           const normalizedX = deltaX / length;
           const normalizedY = deltaY / length;
-
-          this.player.move(normalizedX * maxSpeed, normalizedY * maxSpeed);
+          const speed = Math.min(length * 0.1, maxSpeed); // 距離轉速度，但上限為 maxSpeed
+          this.player.move(normalizedX * speed, normalizedY * speed);
           this.player.setDirection(deltaX, deltaY);
         }
       }
