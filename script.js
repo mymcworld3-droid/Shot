@@ -128,6 +128,24 @@ class Game {
         break;
     }
   }
+  setupPreviewCanvas() {
+    this.previewCanvas = document.getElementById('previewCanvas');
+    if (!this.previewCanvas) {
+      this.previewCanvas = document.createElement('canvas');
+      this.previewCanvas.id = 'previewCanvas';
+      document.body.prepend(this.previewCanvas);
+      console.warn('[Preview] 沒找到 #previewCanvas，自動建立一個');
+    }
+    this.previewCtx = this.previewCanvas.getContext('2d');
+
+    const fit = () => {
+      this.previewCanvas.width = window.innerWidth;
+      this.previewCanvas.height = window.innerHeight;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+  }
+
   pickPreviewTargetIfNeeded(force = false) {
     const now = performance.now();
     if (!force && this.previewTargetId && this.otherPlayers.has(this.previewTargetId)) return;
