@@ -175,7 +175,9 @@ wss.on('connection', (ws) => {
 
 // 廣播訊息給所有玩家（除了發送者）
 function broadcast(message, excludePlayerId = null) {
-  console.log('[Server] 廣播訊息：', message);
+  if (message.type !== 'projectilesUpdate'&&message.type !== 'playerUpdate') {
+    console.log('[Server] 廣播訊息：', message);
+  }
   const messageStr = JSON.stringify(message);
   players.forEach((player, playerId) => {
     if (playerId !== excludePlayerId && player.ws.readyState === WebSocket.OPEN) {
