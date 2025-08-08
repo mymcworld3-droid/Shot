@@ -123,7 +123,7 @@ class Game {
         }
         if (data.playerId && data.playerId === this.previewTargetId) {
           this.previewTargetId = null;
-        )
+        }
         break;
     }
   }
