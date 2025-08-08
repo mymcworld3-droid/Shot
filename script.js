@@ -123,6 +123,7 @@ class Game {
         }
         if (data.playerId && data.playerId === this.previewTargetId) {
           this.previewTargetId = null;
+          this.pickPreviewTargetIfNeeded(true);
         }
         break;
     }
