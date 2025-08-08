@@ -1,6 +1,5 @@
 // ✅ Fixed map support with camera movement and boundary constraints
 const wsUrl = `wss://${window.location.host}`;
-this.socket = new WebSocket(wsUrl);
 
 class Game {
   constructor() {
@@ -84,11 +83,13 @@ class Game {
             this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22', playerData.id));
           }
         });
+        this.pickPreviewTargetIfNeeded(true);
         break;
       case 'playerJoined':
         if (data.player.id !== this.playerId) {
           this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22', data.player.id));
         }
+        this.pickPreviewTargetIfNeeded(true);
         break;
       case 'playerUpdate':
         if (data.player.id !== this.playerId && this.otherPlayers.has(data.player.id)) {
@@ -98,6 +99,10 @@ class Game {
         break;
       case 'playerLeft':
         this.otherPlayers.delete(data.playerId);
+        if (data.playerId === this.previewTargetId) {
+          this.previewTargetId = null;
+         this.pickPreviewTargetIfNeeded(true); // ← 新增
+        }
         break;
       case 'projectileCreated':
         if (data.projectile.playerId !== this.playerId) {
