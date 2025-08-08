@@ -28,8 +28,19 @@ html, body {
   display: none !important;
 }
 
+/* ✅ 新增：預覽背景 Canvas */
+#previewCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0; /* 在最底層 */
+}
+
 /* 主頁面樣式 */
 #mainMenu {
+  position: relative;  /* ✅ 確保可以蓋在預覽上面 */
+  z-index: 1;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
