@@ -131,23 +131,25 @@ wss.on('connection', (ws) => {
           
         case 'playerHit': {
           const victimId = data.playerId;
+          const killerId = data.killerId || null;  // ✅ 接住 killerId
 
-          // 廣播死亡訊息給所有人
+          // 廣播給所有人（包含擊殺者與旁觀者）
           broadcast({
             type: 'playerHit',
-            playerId: victimId
+            playerId: victimId,
+            killerId: killerId                  // ✅ 廣播 killerId
           });
 
-          // 通知自己（被殺的玩家）也死了
+          // （可選）再單獨回給被擊中的人
           const victim = players.get(victimId);
           if (victim && victim.ws.readyState === WebSocket.OPEN) {
             victim.ws.send(JSON.stringify({
               type: 'playerHit',
-              playerId: victimId
+              playerId: victimId,
+              killerId: killerId                // ✅ 一樣帶上
             }));
           }
 
-          // 從伺服器移除該玩家
           players.delete(victimId);
           break;
         }
