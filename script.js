@@ -51,6 +51,9 @@ class Game {
     fit();
     window.addEventListener('resize', fit);
   }
+  this.previewCtx.fillStyle = 'red';
+  this.previewCtx.fillRect(10, 10, 80, 80);
+
 
   initSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
