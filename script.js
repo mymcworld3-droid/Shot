@@ -271,6 +271,13 @@ class Game {
       if (proj.playerId !== this.playerId) {
         const dist = Math.sqrt((proj.x - this.player.x) ** 2 + (proj.y - this.player.y) ** 2);
         if (dist < this.player.radius + proj.radius) {
+          // 告訴 server 我死了
+          if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({
+              type: 'playerHit',
+              playerId: this.playerId
+            }));
+          }
           this.playerHit();
           return;
         }
