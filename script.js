@@ -283,6 +283,7 @@ class Game {
             this.socket.send(JSON.stringify({
               type: 'playerHit',
               playerId: this.playerId
+              killerId: proj.playerId
             }));
           }
           this.playerHit();
