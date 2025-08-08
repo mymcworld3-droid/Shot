@@ -216,15 +216,6 @@ class Game {
     ctx.globalAlpha = 1;
   }
 
-  // 你原本的 drawGrid() 可改成呼叫共用版本（或保留原樣也行）
-  drawGrid() { this.drawGridOnContext(this.ctx); }
-
-  startGame() {
-    // ... 你原本的 startGame
-    this.stopPreview();  // ✅ 開始遊戲時停止預覽
-    // 後續照你原本流程
-  }
-
   setupCanvas() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
@@ -309,6 +300,8 @@ class Game {
   }
 
   startGame() {
+    this.stopPreview();
+    
     const input = document.getElementById('playerIdInput');
     this.playerId = input && input.value.trim() !== ''
       ? input.value.trim()
@@ -446,6 +439,7 @@ class Game {
   }
 
   drawGrid() {
+    this.drawGridOnContext(this.ctx);
     this.ctx.strokeStyle = '#ffffff';
     this.ctx.lineWidth = 1;
     this.ctx.globalAlpha = 0.06;
