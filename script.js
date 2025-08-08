@@ -282,7 +282,7 @@ class Game {
           if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({
               type: 'playerHit',
-              playerId: this.playerId
+              playerId: this.playerId,
               killerId: proj.playerId
             }));
           }
