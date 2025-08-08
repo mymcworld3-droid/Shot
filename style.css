@@ -45,7 +45,9 @@ html, body {
   color: white;
   backdrop-filter: blur(2px);
 }
-
+#gameScreen {
+  z-index: 2;                      /* 進入遊戲後，遊戲畫面最高層 */
+}
 #mainMenu h1 {
   font-size: 3rem;
   margin-bottom: 2rem;
