@@ -11,6 +11,7 @@ class Game {
     this.projectiles = [];
     this.mapWidth = 2000;
     this.mapHeight = 2000;
+    this.killFeed = []; // 用來存擊殺訊息
     this.isRunning = false;
     this.isMobile = true;
     this.socket = null;
@@ -91,6 +92,12 @@ class Game {
           console.log('刪除玩家:', data.playerId);
           this.otherPlayers.delete(data.playerId);
           this.render(); // ✅ 立刻重繪畫面（清掉那個人）  
+        }
+        if (data.killerId) {
+          this.killFeed.push({
+            text: `${data.killerId} 擊殺了 ${data.playerId}`,
+            time: Date.now()
+          });
         }
         break;
     }
@@ -352,6 +359,15 @@ class Game {
     }
     this.projectiles.forEach(p => p.render(this.ctx));
     this.ctx.restore();
+    // 畫擊殺訊息
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '16px Arial';
+    this.ctx.textAlign = 'left';
+    let now = Date.now();
+    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); // 只留5秒
+    this.killFeed.forEach((msg, index) => {
+      this.ctx.fillText(msg.text, 20, 30 + index * 20);
+    });
   }
 }
 
