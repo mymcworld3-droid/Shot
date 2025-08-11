@@ -54,7 +54,16 @@ wss.on('connection', (ws) => {
     try {
       const data = JSON.parse(message);
       
-      switch (data.type) {
+      switch (data.type)    
+        case 'spectateHello':
+          ws.send(JSON.stringify({
+            type: 'currentPlayers',
+            players: Array.from(players.values()).map(p => ({
+              id: p.id, x: p.x, y: p.y,
+              directionX: p.directionX, directionY: p.directionY
+            }))
+          }));
+          break;
         case 'playerJoin':
           // 新玩家加入
           players.set(data.playerId, {
