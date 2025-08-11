@@ -7,6 +7,8 @@ class Game {
     this.ctx = null;
     this.player = null;
     this.otherPlayers = new Map();
+    this.playerName = '';     // 顯示給大家看的名稱（可含空白）
+    this.playerNetId = null;  // 伺服器分配的唯一 ID（finalId）
     this.projectiles = [];
     this.mapWidth = 2000;
     this.mapHeight = 2000;
@@ -57,40 +59,35 @@ class Game {
 
   handleServerMessage(data) {
     switch (data.type) {
+      case 'joinAck':
+      // 記下伺服器分給我的唯一 ID
+        this.playerNetId = data.id;
+        break;
+
       case 'currentPlayers':
-        data.players.forEach(playerData => {
-          if (playerData.id !== this.playerId) {
-            this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22', playerData.id));
+        // 建立其它玩家（用 displayName 當頭上名字）
+        data.players.forEach(p => {
+          if (p.id !== this.playerNetId) {
+            this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName));
           }
         });
         break;
       case 'playerJoined':
-        if (data.player.id !== this.playerId) {
-          this.otherPlayers.set(data.player.id,
+        if (data.player.id !== this.playerNetId) {
+          this.otherPlayers.set(
+            data.player.id,
             new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName)
           );
         }
         break;
       case 'playerUpdate':
-        const pid = ws._internalId;
-        if (players.has(pid)) {
-          const player = players.get(pid);
-          player.x = data.x;
-          player.y = data.y;
-          player.directionX = data.directionX;
-          player.directionY = data.directionY;
-
-          broadcast({
-            type: 'playerUpdate',
-            player: {
-              id: pid,
-              displayName: player.displayName,
-              x: data.x,
-              y: data.y,
-              directionX: data.directionX,
-              directionY: data.directionY
-            }
-          }, pid);
+        // ✅ 這裡之前貼成伺服器碼了，改回客戶端更新
+        if (data.player.id !== this.playerNetId && this.otherPlayers.has(data.player.id)) {
+          const p = this.otherPlayers.get(data.player.id);
+          p.x = data.player.x;
+          p.y = data.player.y;
+          p.directionX = data.player.directionX;
+          p.directionY = data.player.directionY;
         }
         break;
       case 'playerLeft':
@@ -247,37 +244,34 @@ class Game {
     
     const input = document.getElementById('playerIdInput');
     const rawId = input ? input.value : '';
-    const trimmed = rawId.trim();
-    // 如果整個字串不是純空白，就用原始 rawId（保留前後空白）；否則才隨機
-    this.playerId = trimmed !== '' ? rawId : Math.random().toString(36).substr(2, 9);
+    this.playerName = rawId.trim() !== '' ? rawId : Math.random().toString(36).substr(2, 9);
+
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    this.player = new Player( Math.random() * this.mapWidth /2 + this.mapWidth/4, Math.random() * this.mapHeight /2 + this.mapHeight /4, '#3498db',this.playerId);
+
+    this.player = new Player(
+      Math.random() * this.mapWidth / 2 + this.mapWidth / 4,
+      Math.random() * this.mapHeight / 2 + this.mapHeight / 4,
+      '#3498db',
+      this.playerName // 畫自己頭上的文字
+    );
+
     this.killCounts.clear();
-    this.killCounts.set(this.playerId, 0);
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
-    
-    // 廣播玩家加入事件
-    this.socket.send(JSON.stringify({
-      type: 'playerJoin',
-      playerId: this.playerId,
-      x: this.player.x,
-      y: this.player.y
-    }));  
 
-      // 廣播系統訊息
-    if (!this.hasJoinedBefore && this.socket && this.socket.readyState === WebSocket.OPEN) {
+    // 告知伺服器我來了（送 displayName）
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
-        type: 'systemMessage',
-        message: `[系統] 玩家 ${this.playerId} 加入了遊戲`
+        type: 'playerJoin',
+        displayName: this.playerName,
+        x: this.player.x,
+        y: this.player.y
       }));
-
-      this.hasJoinedBefore = true;
     }
-    this.gameLoop();
-  }
+
+    this.gameLoop();}
 
   gameLoop() {
     if (!this.isRunning) return;
@@ -320,10 +314,10 @@ class Game {
       const dy = this.mousePos.y - this.player.y;
       this.player.setDirection(dx, dy);
     }
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.playerNetId) {
       this.socket.send(JSON.stringify({
         type: 'playerUpdate',
-        playerId: this.playerId,
+        playerId: this.playerNetId,
         x: this.player.x,
         y: this.player.y,
         directionX: this.player.directionX,
