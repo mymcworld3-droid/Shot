@@ -14,13 +14,7 @@ class Game {
     this.isRunning = false;
     this.isMobile = true;
     this.socket = null;
-    this.gridSize = 50;
-    this.previewCanvas = null;
-    this.previewCtx = null;
-    this.previewRAF = null;
-    this.previewTargetId = null;  // 目前聚焦的隨機玩家
-    this.previewLastPick = 0;     // 上次挑人的時間
-    this.previewPanT = 0;         // 無人時巡航參數
+    this.gridSize = 50; 
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
     this.joystick = {
@@ -34,25 +28,10 @@ class Game {
   }
 
   init() {
-    this.setupPreviewCanvas();     // ✅ 先建預覽
     this.setupCanvas();
     this.setupEventListeners();
     this.initSocket();
-    this.startPreview();           // ✅ 啟動預覽迴圈
   }
-  setupPreviewCanvas() {
-    this.previewCanvas = document.getElementById('previewCanvas');
-    this.previewCtx = this.previewCanvas.getContext('2d');
-    const fit = () => {
-      this.previewCanvas.width = window.innerWidth;
-      this.previewCanvas.height = window.innerHeight;
-    };
-    fit();
-    window.addEventListener('resize', fit);
-  }
-  this.previewCtx.fillStyle = 'red';
-  this.previewCtx.fillRect(10, 10, 80, 80);
-
 
   initSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -83,13 +62,11 @@ class Game {
             this.otherPlayers.set(playerData.id, new Player(playerData.x, playerData.y, '#e67e22', playerData.id));
           }
         });
-        this.pickPreviewTargetIfNeeded(true);
         break;
       case 'playerJoined':
         if (data.player.id !== this.playerId) {
           this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22', data.player.id));
         }
-        this.pickPreviewTargetIfNeeded(true);
         break;
       case 'playerUpdate':
         if (data.player.id !== this.playerId && this.otherPlayers.has(data.player.id)) {
@@ -100,8 +77,6 @@ class Game {
       case 'playerLeft':
         this.otherPlayers.delete(data.playerId);
         if (data.playerId === this.previewTargetId) {
-          this.previewTargetId = null;
-         this.pickPreviewTargetIfNeeded(true); // ← 新增
         }
         break;
       case 'projectileCreated':
@@ -129,106 +104,10 @@ class Game {
             time: Date.now()
           });
         }
-        if (data.playerId && data.playerId === this.previewTargetId) {
-          this.previewTargetId = null;
-          this.pickPreviewTargetIfNeeded(true);
-        }
         break;
     }
   }
-  setupPreviewCanvas() {
-    this.previewCanvas = document.getElementById('previewCanvas');
-    if (!this.previewCanvas) {
-      this.previewCanvas = document.createElement('canvas');
-      this.previewCanvas.id = 'previewCanvas';
-      document.body.prepend(this.previewCanvas);
-      console.warn('[Preview] 沒找到 #previewCanvas，自動建立一個');
-    }
-    this.previewCtx = this.previewCanvas.getContext('2d');
-
-    const fit = () => {
-      this.previewCanvas.width = window.innerWidth;
-      this.previewCanvas.height = window.innerHeight;
-    };
-    fit();
-    window.addEventListener('resize', fit);
-  }
-
-  pickPreviewTargetIfNeeded(force = false) {
-    const now = performance.now();
-    if (!force && this.previewTargetId && this.otherPlayers.has(this.previewTargetId)) return;
-    if (!force && now - this.previewLastPick < 3000) return; // 三秒內不要一直換
-
-    const keys = Array.from(this.otherPlayers.keys());
-    if (keys.length === 0) {
-      this.previewTargetId = null; // 無人 → 巡航模式
-      return;
-    }
-    this.previewTargetId = keys[Math.floor(Math.random() * keys.length)];
-    this.previewLastPick = now;
-  }
-  startPreview() {
-    const loop = () => {
-      // 只有在未開始遊戲時才跑預覽
-      if (!this.isRunning) this.renderPreview();
-      this.previewRAF = requestAnimationFrame(loop);
-    };
-    if (!this.previewRAF) this.previewRAF = requestAnimationFrame(loop);
-  }
-  stopPreview() {
-    if (this.previewRAF) {
-      cancelAnimationFrame(this.previewRAF);
-      this.previewRAF = null;
-    }
-  }
-  renderPreview() {
-    const ctx = this.previewCtx;
-    const W = this.previewCanvas.width;
-    const H = this.previewCanvas.height;
-
-    // 背景外框
-    ctx.fillStyle = '#34495e';
-    ctx.fillRect(0, 0, W, H);
-
-    // 決定鏡頭座標
-    let camX = 0, camY = 0;
-    let focusX = this.mapWidth / 2;
-    let focusY = this.mapHeight / 2;
-
-    if (this.previewTargetId && this.otherPlayers.has(this.previewTargetId)) {
-      const p = this.otherPlayers.get(this.previewTargetId);
-      focusX = p.x; focusY = p.y;
-    } else {
-      // 無人：巡航（繞地圖中心畫圈）
-      this.previewPanT += 0.003;
-      const r = Math.min(this.mapWidth, this.mapHeight) * 0.25;
-      focusX = this.mapWidth / 2 + Math.cos(this.previewPanT) * r;
-      focusY = this.mapHeight / 2 + Math.sin(this.previewPanT) * r;
-    }
-
-    camX = focusX - W / 2;
-    camY = focusY - H / 2;
-
-    ctx.save();
-    ctx.translate(-camX, -camY);
-
-    // 地圖內部
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
-
-    // 網格
-    this.drawGridOnContext(ctx);
-
-    // 畫其他玩家（預覽不畫自己）
-    this.otherPlayers.forEach(p => p && p.render(ctx));
-
-    ctx.restore();
-
-    // 左下角小字提示（可選）
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = '13px Arial';
-    ctx.fillText('預覽模式：點「開始」加入遊戲', 16, H - 16);
-  }
+  
   drawGridOnContext(ctx) {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
@@ -326,7 +205,6 @@ class Game {
   }
 
   startGame() {
-    this.stopPreview();
     
     const input = document.getElementById('playerIdInput');
     this.playerId = input && input.value.trim() !== ''
