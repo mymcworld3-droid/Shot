@@ -113,7 +113,7 @@ class Game {
         this.killCounts.set(victimId, 0);
 
         // Kill feed：帶出累積 K
-        const suffix = (killerId && killerCount !== null) ? ` | K:${killerCount}` : '';
+        const suffix = (killerId && killerCount !== null) ? ` | 連殺:${killerCount}` : '';
         const killerName = killerId ?? '未知';
         this.killFeed.push({
           text: `${killerName} 擊殺了 ${victimId}${suffix}`,
