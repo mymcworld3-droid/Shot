@@ -251,9 +251,6 @@ class Game {
 
       this.hasJoinedBefore = true;
     }
-
-    this.gameLoop();
-  }
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {  
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
