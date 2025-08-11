@@ -85,7 +85,8 @@ class Game {
             data.projectile.y,
             data.projectile.directionX,
             data.projectile.directionY,
-            data.projectile.playerId
+            data.projectile.playerId,
+            data.projectile.radius || 5
           ));
         }
         break;
@@ -363,7 +364,7 @@ class Game {
       this.player.y,
       this.player.directionX,
       this.player.directionY,
-      this.playerId
+      this.playerId,
       bulletRadius
     );
     this.projectiles.push(projectile);
@@ -374,7 +375,7 @@ class Game {
         y: this.player.y,
         directionX: this.player.directionX,
         directionY: this.player.directionY,
-        playerId: this.playerId
+        playerId: this.playerId,
         radius: bulletRadius
       }));
     }
