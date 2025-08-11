@@ -114,7 +114,8 @@ wss.on('connection', (ws) => {
             }
           }, finalId);
           break;
-        case 'playerUpdate':
+        
+        case 'playerUpdate':{
           // 更新玩家位置
           if (players.has(data.playerId)) {
             const player = players.get(data.playerId);
