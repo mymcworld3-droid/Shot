@@ -1,4 +1,4 @@
-// ✅ Fixed map support with camera movement and boundary constraints
+
 const wsUrl = `wss://${window.location.host}`;
 
 class Game {
@@ -94,16 +94,14 @@ class Game {
         this.otherPlayers.delete(data.playerId);
         break;
       case 'projectileCreated':
-        if (data.projectile.playerId !== this.playerNetId) {
-          this.projectiles.push(new Projectile(
-            data.projectile.x,
-            data.projectile.y,
-            data.projectile.directionX,
-            data.projectile.directionY,
-            data.projectile.playerId,
-            data.projectile.radius || 5
-          ));
-        }
+        this.projectiles.push(new Projectile(
+          data.projectile.x,
+          data.projectile.y,
+          data.projectile.directionX,
+          data.projectile.directionY,
+          data.projectile.playerId,
+          data.projectile.radius || 5
+        ));
         break;
       case 'systemMessage':
         this.killFeed.push({
@@ -373,15 +371,6 @@ class Game {
     if (this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) {
       bulletRadius = 10; // ✅ 加大子彈
     }
-    const projectile = new Projectile(
-      this.player.x,
-      this.player.y,
-      this.player.directionX,
-      this.player.directionY,
-      this.playerNetId,
-      bulletRadius
-    );
-    this.projectiles.push(projectile);
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'shoot',
