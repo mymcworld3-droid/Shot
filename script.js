@@ -91,20 +91,28 @@ class Game {
           ));
         }
         break;
-      case 'playerHit':
-        if (data.playerId === this.playerId) {
+      case 'playerHit': {
+        const victimId = data.playerId;
+        const killerId = data.killerId;
+
+        // UI & 狀態
+        if (victimId === this.playerId) {
           this.playerHit();
         } else {
-          console.log('刪除玩家:', data.playerId);
-          this.otherPlayers.delete(data.playerId);
-          this.render(); // ✅ 立刻重繪畫面（清掉那個人）  
+          console.log('刪除玩家:', victimId);
+          this.otherPlayers.delete(victimId);
+          this.render();
         }
+
+        // 計數：killer +1、victim 歸零
         let killerCount = null;
         if (killerId) {
           killerCount = (this.killCounts.get(killerId) || 0) + 1;
           this.killCounts.set(killerId, killerCount);
         }
         this.killCounts.set(victimId, 0);
+
+        // Kill feed：帶出累積 K
         const suffix = (killerId && killerCount !== null) ? ` | K:${killerCount}` : '';
         const killerName = killerId ?? '未知';
         this.killFeed.push({
@@ -322,6 +330,7 @@ class Game {
   }
 
   playerHit() {
+    if (this.playerId) this.killCounts.set(this.playerId, 0);
     this.isRunning = false;
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
