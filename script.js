@@ -64,11 +64,54 @@ class Game {
           }
         });
         break;
-      case 'playerJoined':
-        if (data.player.id !== this.playerId) {
-          this.otherPlayers.set(data.player.id, new Player(data.player.x, data.player.y, '#e67e22', data.player.id));
+      case 'playerJoin': {
+        // 如果已經有人用這個名字，給他加一個隨機尾碼
+        let baseName = data.playerId;
+        let finalId = baseName;
+        while ([...players.keys()].includes(finalId)) {
+          finalId = baseName + '_' + Math.floor(Math.random() * 1000);
         }
+
+        ws._internalId = finalId; // 記錄在連線上
+        ws._displayName = baseName; // 玩家真正輸入的名字（顯示用）
+      
+        players.set(finalId, {
+          id: finalId,
+          displayName: baseName,
+          x: data.x,
+          y: data.y,
+          directionX: 0,  
+          directionY: 0,
+          ws
+        });
+
+        // 發送當前所有玩家給新玩家
+        ws.send(JSON.stringify({
+          type: 'currentPlayers',
+          players: Array.from(players.values()).map(p => ({
+            id: p.id,
+            displayName: p.displayName,
+            x: p.x,
+            y: p.y,
+            directionX: p.directionX,
+            directionY: p.directionY
+          }))
+        }));
+
+        // 通知其他玩家
+        broadcast({
+          type: 'playerJoined',
+          player: {
+            id: finalId,
+            displayName: baseName,
+            x: data.x,
+            y: data.y,
+            directionX: 0,
+            directionY: 0
+          }
+        }, finalId);
         break;
+      }
       case 'playerUpdate':
         if (data.player.id !== this.playerId && this.otherPlayers.has(data.player.id)) {
           const player = this.otherPlayers.get(data.player.id);
