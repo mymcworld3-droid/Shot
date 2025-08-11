@@ -175,8 +175,9 @@ wss.on('connection', (ws) => {
           const shooterId = data.playerId;
           if (!players.has(shooterId)) break;
           const radius = computeBulletRadiusById(shooterId);
+          const p = players.get(shooterId);  
 
-          const startsEx = (p.displayName || '').startsWith('ex'); // 是否 ex 前綴
+          const startsEx = (p.displayName || '').startsWith('Ex'); // 是否 ex 前綴
           if (startsEx) {
             const dirs = getFanDirections(data.directionX, data.directionY, 45, 4);
             for (const d of dirs) {
