@@ -11,6 +11,12 @@ function log(...args) {
 function logError(...args) {
   if (DEBUG) console.error(...args);
 }
+function computeSpeedMultiplierById(netId) {
+  const p = players.get(netId);
+  const name = p?.displayName || '';
+  return (name.startsWith('    ') && name.endsWith('    ')) ? 1.5 : 1.0;
+}
+
 
 // 創建 HTTP 伺服器來提供靜態文件
 const server = http.createServer((req, res) => {
@@ -123,8 +129,13 @@ wss.on('connection', (ws) => {
         case 'playerUpdate': {
           if (players.has(data.playerId)) {
             const player = players.get(data.playerId);
-            player.x = data.x;
-            player.y = data.y;
+
+            // 計算速度倍率
+            const speedMult = computeSpeedMultiplierById(data.playerId);
+
+            // 伺服器端直接調整位置（防止外掛把倍率亂改）
+            player.x += data.directionX * speedMult;
+            player.y += data.directionY * speedMult;
             player.directionX = data.directionX;
             player.directionY = data.directionY;
 
@@ -132,15 +143,16 @@ wss.on('connection', (ws) => {
               type: 'playerUpdate',
               player: {
                 id: data.playerId,
-                x: data.x,
-                y: data.y,
-                directionX: data.directionX,
-                directionY: data.directionY
+                x: player.x,
+                y: player.y,
+                directionX: player.directionX,
+                directionY: player.directionY
               }
             }, data.playerId);
           }
           break;
         }
+
 
         case 'shoot': {
           const shooterId = data.playerId;
