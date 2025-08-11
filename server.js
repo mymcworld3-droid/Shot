@@ -114,6 +114,7 @@ wss.on('connection', (ws) => {
             }
           }, finalId);
           break;
+        }
         
         case 'playerUpdate':{
           // 更新玩家位置
@@ -137,6 +138,7 @@ wss.on('connection', (ws) => {
             }, data.playerId);
           }
           break;
+        }
           
         case 'shoot':
           // 處理射擊
