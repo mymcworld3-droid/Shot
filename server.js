@@ -140,16 +140,6 @@ wss.on('connection', (ws) => {
             killerId: killerId                  // ✅ 廣播 killerId
           });
 
-          // （可選）再單獨回給被擊中的人
-          const victim = players.get(victimId);
-          if (victim && victim.ws.readyState === WebSocket.OPEN) {
-            victim.ws.send(JSON.stringify({
-              type: 'playerHit',
-              playerId: victimId,
-              killerId: killerId                // ✅ 一樣帶上
-            }));
-          }
-
           players.delete(victimId);
           break;
         }
