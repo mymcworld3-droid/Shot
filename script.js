@@ -120,6 +120,7 @@ class Game {
           time: Date.now()
         });
         break;
+      }
     }
   }
   
