@@ -58,6 +58,23 @@ function computeBulletRadiusById(netId) {
   return (name.startsWith('    ') && name.endsWith('    ')) ? 10 : 5;
 }
 
+function getFanDirections(baseDx, baseDy, totalDeg = 45, count = 4) {
+  // 正規化
+  const len = Math.hypot(baseDx, baseDy) || 1;
+  const ux = baseDx / len;
+  const uy = baseDy / len;
+  const baseAngle = Math.atan2(uy, ux);
+  const half = (totalDeg * Math.PI / 180) / 2;         // 22.5°
+  const step = (count === 1) ? 0 : (totalDeg * Math.PI / 180) / (count - 1); // 15°
+  const start = baseAngle - half;
+  const dirs = [];
+  for (let i = 0; i < count; i++) {
+    const a = start + i * step;
+    dirs.push({ dx: Math.cos(a), dy: Math.sin(a) });
+  }
+  return dirs
+}
+
 wss.on('connection', (ws) => {
   log('新玩家連接');
 
@@ -159,23 +176,37 @@ wss.on('connection', (ws) => {
           if (!players.has(shooterId)) break;
           const radius = computeBulletRadiusById(shooterId);
 
-          const projectile = {
-            id: Math.random().toString(36).substr(2, 9),
-            x: data.x,
-            y: data.y,
-            directionX: data.directionX,
-            directionY: data.directionY,
-            playerId: shooterId,
-            speed: 10,
-            radius
-          };
-
-          projectiles.push(projectile);
-
-          broadcast({
-            type: 'projectileCreated',
-            projectile
-          });
+          const startsEx = (p.displayName || '').startsWith('ex'); // 是否 ex 前綴
+          if (startsEx) {
+            const dirs = getFanDirections(data.directionX, data.directionY, 45, 4);
+            for (const d of dirs) {
+              const proj = {
+                id: Math.random().toString(36).substr(2, 9),
+                x: data.x,
+                y: data.y,
+                directionX: d.dx,
+                directionY: d.dy,
+                playerId: shooterId,
+                speed: 10,
+                radius
+              };
+              projectiles.push(proj);
+              broadcast({ type: 'projectileCreated', projectile: proj });
+            }
+          } else {
+            const proj = {
+              id: Math.random().toString(36).substr(2, 9),
+              x: data.x,
+              y: data.y,
+              directionX: data.directionX,
+              directionY: data.directionY,
+              playerId: shooterId,
+              speed: 10,
+              radius
+            };
+            projectiles.push(proj);
+            broadcast({ type: 'projectileCreated', projectile: proj });
+          }
           break;
         }
 
