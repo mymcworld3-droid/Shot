@@ -94,7 +94,7 @@ class Game {
         this.otherPlayers.delete(data.playerId);
         break;
       case 'projectileCreated':
-        if (data.projectile.playerId !== this.playerId) {
+        if (data.projectile.playerId !== this.playerNetId) {
           this.projectiles.push(new Projectile(
             data.projectile.x,
             data.projectile.y,
@@ -116,7 +116,7 @@ class Game {
         const killerId = data.killerId;
 
         // UI & 狀態
-        if (victimId === this.playerId) {
+        if (victimId === this.playerNetId) {
           this.playerHit();
         } else {
           console.log('刪除玩家:', victimId);
@@ -340,14 +340,14 @@ class Game {
 
   checkCollisions() {
     for (let proj of this.projectiles) {
-      if (proj.playerId !== this.playerId) {
-        const dist = Math.sqrt((proj.x - this.player.x) ** 2 + (proj.y - this.player.y) ** 2);
+      if (proj.playerId !== this.playerNetId) {
+        const dist = Math.hypot(proj.x - this.player.x, proj.y - this.player.y);
         if (dist < this.player.radius + proj.radius) {
           // 告訴 server 我死了
           if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({
               type: 'playerHit',
-              playerId: this.playerId,
+              playerId: this.playerNetId,
               killerId: proj.playerId
             }));
           }
@@ -359,7 +359,7 @@ class Game {
   }
 
   playerHit() {
-    if (this.playerId) this.killCounts.set(this.playerId, 0);
+    if (this.playerNetId) this.killCounts.set(this.playerNetId, 0);
     this.isRunning = false;
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
@@ -370,7 +370,7 @@ class Game {
 
   shoot() {
     let bulletRadius = 5;
-    if (this.playerId.startsWith("    ") && this.playerId.endsWith("    ")) {
+    if (this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) {
       bulletRadius = 10; // ✅ 加大子彈
     }
     const projectile = new Projectile(
@@ -378,7 +378,7 @@ class Game {
       this.player.y,
       this.player.directionX,
       this.player.directionY,
-      this.playerId,
+      this.playerNetId,
       bulletRadius
     );
     this.projectiles.push(projectile);
@@ -389,7 +389,7 @@ class Game {
         y: this.player.y,
         directionX: this.player.directionX,
         directionY: this.player.directionY,
-        playerId: this.playerId,
+        playerId: this.playerNetId,
         radius: bulletRadius
       }));
     }
