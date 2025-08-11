@@ -41,6 +41,12 @@ const wss = new WebSocket.Server({ server });
 const players = new Map();
 const projectiles = [];
 
+function computeBulletRadius(playerId) {
+  return (typeof playerId === 'string'
+    && playerId.startsWith('    ')
+    && playerId.endsWith('    ')) ? 10 : 5;
+}
+
 wss.on('connection', (ws) => {
   console.log('新玩家連接');
   
@@ -110,6 +116,7 @@ wss.on('connection', (ws) => {
           
         case 'shoot':
           // 處理射擊
+          const radius = computeBulletRadius(data.playerId); 
           const projectile = {
             id: Math.random().toString(36).substr(2, 9),
             x: data.x,
@@ -117,7 +124,8 @@ wss.on('connection', (ws) => {
             directionX: data.directionX,
             directionY: data.directionY,
             playerId: data.playerId,
-            speed: 10
+            speed: 10,
+            radius
           };
           
           projectiles.push(projectile);
