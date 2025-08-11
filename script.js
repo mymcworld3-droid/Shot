@@ -98,12 +98,18 @@ class Game {
           this.otherPlayers.delete(data.playerId);
           this.render(); // ✅ 立刻重繪畫面（清掉那個人）  
         }
-        if (data.killerId) {
-          this.killFeed.push({
-            text: `${data.killerId} 擊殺了 ${data.playerId}`,
-            time: Date.now()
-          });
+        let killerCount = null;
+        if (killerId) {
+          killerCount = (this.killCounts.get(killerId) || 0) + 1;
+          this.killCounts.set(killerId, killerCount);
         }
+        this.killCounts.set(victimId, 0);
+        const suffix = (killerId && killerCount !== null) ? ` | K:${killerCount}` : '';
+        const killerName = killerId ?? '未知';
+        this.killFeed.push({
+          text: `${killerName} 擊殺了 ${victimId}${suffix}`,
+          time: Date.now()
+        });
         break;
     }
   }
