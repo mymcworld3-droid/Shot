@@ -41,10 +41,10 @@ const wss = new WebSocket.Server({ server });
 const players = new Map();
 const projectiles = [];
 
-function computeBulletRadius(playerId) {
-  return (typeof playerId === 'string'
-    && playerId.startsWith('    ')
-    && playerId.endsWith('    ')) ? 10 : 5;
+function computeBulletRadiusById(netId) {
+  const p = players.get(netId);
+  const name = p?.displayName || '';
+  return (name.startsWith('    ') && name.endsWith('    ')) ? 10 : 5;
 }
 
 wss.on('connection', (ws) => {
@@ -59,14 +59,16 @@ wss.on('connection', (ws) => {
           ws.send(JSON.stringify({
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
-              id: p.id, x: p.x, y: p.y,
+              id: p.id,
+              displayName : p.displayName,
+              x: p.x, y: p.y,
               directionX: p.directionX, directionY: p.directionY
             }))
           }));
           break;
         case 'playerJoin': {
           // 如果已經有人用這個名字，給他加一個隨機尾碼
-          let baseName = data.playerId;
+          const baseName = String(data.displayName ?? '').slice(0, 32); // 防爆字串
           let finalId = baseName;
           while ([...players.keys()].includes(finalId)) {
             finalId = baseName + '_' + Math.floor(Math.random() * 1000);
@@ -84,7 +86,8 @@ wss.on('connection', (ws) => {
             directionY: 0,
             ws
           });
-
+          
+          ws.send(JSON.stringify({ type: 'joinAck', id: finalId, displayName: ws._displayName }));
           // 發送當前所有玩家給新玩家
           ws.send(JSON.stringify({
             type: 'currentPlayers',
@@ -136,14 +139,16 @@ wss.on('connection', (ws) => {
           
         case 'shoot':
           // 處理射擊
-          const radius = computeBulletRadius(data.playerId); 
+          const shooterId = data.playerId;
+          if (!players.has(shooterId)) break; // 非法或過期
+          const radius = computeBulletRadiusById(shooterId);
           const projectile = {
             id: Math.random().toString(36).substr(2, 9),
             x: data.x,
             y: data.y,
             directionX: data.directionX,
             directionY: data.directionY,
-            playerId: data.playerId,
+            playerId: shooterId,
             speed: 10,
             radius
           };
