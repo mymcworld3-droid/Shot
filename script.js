@@ -234,7 +234,27 @@ class Game {
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    if (!this.hasJoinedBefore && this.socket && this.socket.readyState === WebSocket.OPEN) {
+    // 廣播玩家加入事件
+      this.socket.send(JSON.stringify({
+        type: 'playerJoin',
+        playerId: this.playerId,
+        x: this.player.x,
+        y: this.player.y
+      }));  
+
+      // 廣播系統訊息
+      this.socket.send(JSON.stringify({
+        type: 'systemMessage',
+        message: `[系統] 玩家 ${this.playerId} 加入了遊戲`
+      }));
+
+      this.hasJoinedBefore = true;
+    }
+
+    this.gameLoop();
+  }
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {  
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
         playerId: this.playerId,
