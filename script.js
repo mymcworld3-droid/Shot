@@ -487,7 +487,7 @@ class Player {
 }
 
 class Projectile {
-  constructor(x, y, directionX, directionY, playerId) {
+  constructor(x, y, directionX, directionY, playerId,radius = 5) {
     this.x = x;
     this.y = y;
     this.radius = radius;
