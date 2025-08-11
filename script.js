@@ -77,8 +77,6 @@ class Game {
         break;
       case 'playerLeft':
         this.otherPlayers.delete(data.playerId);
-        if (data.playerId === this.previewTargetId) {
-        }
         break;
       case 'projectileCreated':
         if (data.projectile.playerId !== this.playerId) {
@@ -90,6 +88,12 @@ class Game {
             data.projectile.playerId
           ));
         }
+        break;
+      case 'systemMessage':
+        this.killFeed.push({
+          text: data.message,
+          time: Date.now()
+        });
         break;
       case 'playerHit': {
         const victimId = data.playerId;
@@ -228,7 +232,7 @@ class Game {
       : Math.random().toString(36).substr(2, 9);
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    this.player = new Player( Math.random() * this.mapWidth /2 + this.mapWidth/4, Math.random() * this.mapHeight /2 + this.mapHeght /4, '#3498db',this.playerId);
+    this.player = new Player( Math.random() * this.mapWidth /2 + this.mapWidth/4, Math.random() * this.mapHeight /2 + this.mapHeight /4, '#3498db',this.playerId);
     this.killCounts.clear();
     this.killCounts.set(this.playerId, 0);
     this.projectiles = [];
@@ -250,14 +254,6 @@ class Game {
       }));
 
       this.hasJoinedBefore = true;
-    }
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {  
-      this.socket.send(JSON.stringify({
-        type: 'playerJoin',
-        playerId: this.playerId,
-        x: this.player.x,
-        y: this.player.y
-      }));
     }
     this.gameLoop();
   }
