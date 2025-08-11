@@ -147,14 +147,11 @@ wss.on('connection', (ws) => {
           if (players.has(data.playerId)) {
             const player = players.get(data.playerId);
 
-            // 計算速度倍率
-            const speedMult = computeSpeedMultiplierById(data.playerId);
-
-            // 伺服器端直接調整位置（防止外掛把倍率亂改）
-            player.x += data.directionX * speedMult;
-            player.y += data.directionY * speedMult;
+            player.x = data.x;
+            player.y = data.y;
             player.directionX = data.directionX;
             player.directionY = data.directionY;
+
 
             broadcast({
               type: 'playerUpdate',
