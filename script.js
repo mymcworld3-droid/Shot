@@ -15,6 +15,7 @@ class Game {
     this.isMobile = true;
     this.socket = null;
     this.gridSize = 50; 
+    this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
     this.joystick = {
@@ -219,6 +220,8 @@ class Game {
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
     this.player = new Player( Math.random() * this.mapWidth /2, Math.random() * this.mapHeight /2, '#3498db',this.playerId);
+    this.killCounts.clear();
+    this.killCounts.set(this.playerId, 0);
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
