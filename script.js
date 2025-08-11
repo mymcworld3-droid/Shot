@@ -212,7 +212,7 @@ class Game {
       : Math.random().toString(36).substr(2, 9);
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    this.player = new Player(this.mapWidth / 2, this.mapHeight / 2, '#3498db',this.playerId);
+    this.player = new Player( Math.floor(Math.random()*this.mapWidth / 2, Math.floor(Math.random()*this.mapHeight / 2, '#3498db',this.playerId);
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
