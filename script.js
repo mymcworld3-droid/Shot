@@ -228,9 +228,10 @@ class Game {
   startGame() {
     
     const input = document.getElementById('playerIdInput');
-    this.playerId = input && input.value.trim() !== ''
-      ? input.value.trim()
-      : Math.random().toString(36).substr(2, 9);
+    const rawId = input ? input.value : '';
+    const trimmed = rawId.trim();
+    // 如果整個字串不是純空白，就用原始 rawId（保留前後空白）；否則才隨機
+    this.playerId = trimmed !== '' ? rawId : Math.random().toString(36).substr(2, 9);
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
     this.player = new Player( Math.random() * this.mapWidth /2 + this.mapWidth/4, Math.random() * this.mapHeight /2 + this.mapHeight /4, '#3498db',this.playerId);
@@ -239,16 +240,17 @@ class Game {
     this.projectiles = [];
     this.otherPlayers.clear();
     this.isRunning = true;
-    if (!this.hasJoinedBefore && this.socket && this.socket.readyState === WebSocket.OPEN) {
+    
     // 廣播玩家加入事件
-      this.socket.send(JSON.stringify({
-        type: 'playerJoin',
-        playerId: this.playerId,
-        x: this.player.x,
-        y: this.player.y
-      }));  
+    this.socket.send(JSON.stringify({
+      type: 'playerJoin',
+      playerId: this.playerId,
+      x: this.player.x,
+      y: this.player.y
+    }));  
 
       // 廣播系統訊息
+    if (!this.hasJoinedBefore && this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'systemMessage',
         message: `[系統] 玩家 ${this.playerId} 加入了遊戲`
