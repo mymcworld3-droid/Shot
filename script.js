@@ -354,12 +354,17 @@ class Game {
   }
 
   shoot() {
+    let bulletRadius = 5;
+    if (this.playerId.startsWith("    ") && this.playerId.endsWith("    ")) {
+      bulletRadius = 10; // ✅ 加大子彈
+    }
     const projectile = new Projectile(
       this.player.x,
       this.player.y,
       this.player.directionX,
       this.player.directionY,
       this.playerId
+      bulletRadius
     );
     this.projectiles.push(projectile);
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -370,6 +375,7 @@ class Game {
         directionX: this.player.directionX,
         directionY: this.player.directionY,
         playerId: this.playerId
+        radius: bulletRadius
       }));
     }
   }
@@ -483,7 +489,7 @@ class Projectile {
   constructor(x, y, directionX, directionY, playerId) {
     this.x = x;
     this.y = y;
-    this.radius = 5;
+    this.radius = radius;
     this.speed = 10;
     this.directionX = directionX;
     this.directionY = directionY;
