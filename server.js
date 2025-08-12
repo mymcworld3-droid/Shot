@@ -57,6 +57,19 @@ function computeBulletRadiusById(netId) {
   const name = p?.displayName || '';
   return (name.startsWith('    ') && name.endsWith('    ')) ? 10 : 5;
 }
+function isSpaced(name) {
+  return name.startsWith('    ') && name.endsWith('    ');
+}
+function isExName(name) {
+  return /^ex/i.test(name);  // 不分大小寫
+}
+function computeDamageByShooter(id) {
+  const p = players.get(id);
+  const name = p?.displayName || '';
+  if (isSpaced(name)) return 9; // 前後四個空白
+  if (isExName(name)) return 4; // Ex 前綴
+  return 5;                     // 一般
+}
 
 function getFanDirections(baseDx, baseDy, totalDeg = 80, count = 4) {
   // 正規化
@@ -90,7 +103,8 @@ wss.on('connection', (ws) => {
               id: p.id,
               displayName: p.displayName,
               x: p.x, y: p.y,
-              directionX: p.directionX, directionY: p.directionY
+              directionX: p.directionX, directionY: p.directionY,
+              hp: p.hp
             }))
           }));
           break;
@@ -127,7 +141,8 @@ wss.on('connection', (ws) => {
               x: p.x,
               y: p.y,
               directionX: p.directionX,
-              directionY: p.directionY
+              directionY: p.directionY,
+              hp: p.hp             
             }))
           }));
 
@@ -173,23 +188,23 @@ wss.on('connection', (ws) => {
         case 'shoot': {
           const shooterId = data.playerId;
           if (!players.has(shooterId)) break;
-          const radius = computeBulletRadiusById(shooterId);
-          const p = players.get(shooterId);  
+          const shooter = players.get(shooterId);
+          const name = shooter.displayName || '';
 
-          const startsEx = (p.displayName || '').startsWith(' Ex'); // 是否 ex 前綴
-          const speed = startsEx ? 6 : 10;
-          if (startsEx) {
-            const dirs = getFanDirections(data.directionX, data.directionY, 80, 4);
+          const radius = isSpaced(name) ? 10 : 5;          // 空白玩家子彈大
+          const dmg    = computeDamageByShooter(shooterId);
+          const speed  = isExName(name) ? 6 : 10;          // Ex 降速
+
+          if (isExName(name)) {
+            const dirs = getFanDirections(data.directionX, data.directionY, 45, 4); // 45°、4顆
             for (const d of dirs) {
               const proj = {
                 id: Math.random().toString(36).substr(2, 9),
-                x: data.x,
-                y: data.y,
-                directionX: d.dx,
-                directionY: d.dy,
+                x: data.x, y: data.y,
+                directionX: d.dx, directionY: d.dy,
                 playerId: shooterId,
-                speed,
-                radius
+                speed, radius,
+                damage: dmg
               };
               projectiles.push(proj);
               broadcast({ type: 'projectileCreated', projectile: proj });
@@ -197,16 +212,45 @@ wss.on('connection', (ws) => {
           } else {
             const proj = {
               id: Math.random().toString(36).substr(2, 9),
-              x: data.x,
-              y: data.y,
-              directionX: data.directionX,
-              directionY: data.directionY,
+              x: data.x, y: data.y,
+              directionX: data.directionX, directionY: data.directionY,
               playerId: shooterId,
-              speed,
-              radius
+              speed, radius,
+              damage: dmg
             };
             projectiles.push(proj);
             broadcast({ type: 'projectileCreated', projectile: proj });
+          }
+          break;
+        }
+        case 'playerDamaged': {
+          const victimId  = data.victimId;
+          const shooterId = data.shooterId;
+          const projectileId = data.projectileId; // 可選
+
+          if (!players.has(victimId) || !players.has(shooterId)) break;
+
+          const victim = players.get(victimId);
+          const dmg = computeDamageByShooter(shooterId);
+
+          victim.hp = Math.max(0, victim.hp - dmg);
+          victim.lastHitAt = Date.now();
+
+          // 命中後把該子彈移除（如果有帶 id）
+          if (projectileId) {
+            const idx = projectiles.findIndex(p => p.id === projectileId);
+            if (idx !== -1) {
+              const [removed] = projectiles.splice(idx, 1);
+              broadcast({ type: 'projectileDestroyed', projectileId: removed.id });
+            }
+          }
+
+          if (victim.hp <= 0) {
+            broadcast({ type: 'playerHit', playerId: victimId, killerId: shooterId });
+            players.delete(victimId);
+          } else {
+            // 同步血量
+            broadcast({ type: 'hpUpdate', playerId: victimId, hp: victim.hp });
           }
           break;
         }
@@ -279,6 +323,18 @@ setInterval(() => {
     });
   }
 }, 50);
+
+setInterval(() => {
+  const now = Date.now();
+  players.forEach((p) => {
+    if (p.hp < 10 && now - p.lastHitAt >= 3000) {
+      p.hp += 1;
+      if (p.hp > 10) p.hp = 10;
+      broadcast({ type: 'hpUpdate', playerId: p.id, hp: p.hp });
+    }
+  });
+}, 500);
+
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
