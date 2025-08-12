@@ -55,7 +55,7 @@ const projectiles = [];
 function computeBulletRadiusById(netId) {
   const p = players.get(netId);
   const name = p?.displayName || '';
-  return (name.startsWith('    ') && name.endsWith('    ')) ? 8 : 5;
+  return (name.startsWith('    ') && name.endsWith('    ')) ? 10 : 5;
 }
 
 function getFanDirections(baseDx, baseDy, totalDeg = 65, count = 4) {
