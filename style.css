@@ -94,3 +94,18 @@ html, body {
   transform: translate(-50%, -50%);
   transition: all 0.1s ease;
 }
+#tip-box{
+  position: fixed;      /* 右上角固定 */
+  top: 10px;
+  right: 15px;
+  z-index: 9999;        /* 蓋過 canvas */
+  background: rgba(0,0,0,.6);
+  color: yellow;
+  font-family: sans-serif;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  pointer-events: none;
+  user-select: none;
+}
+
