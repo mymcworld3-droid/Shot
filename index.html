@@ -1,12 +1,3 @@
-
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>chjhs shooter</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
-</head>
 <body>
   <!-- 主頁面 -->
   <div id="mainMenu" class="screen">
@@ -14,33 +5,18 @@
     <input type="text" id="playerIdInput" placeholder="輸入你的暱稱" maxlength="12" />
     <button id="startBtn" class="start-button">開始遊戲</button>
   </div>
+
   <!-- 遊戲畫面 -->
   <div id="gameScreen" class="screen hidden">
     <canvas id="gameCanvas"></canvas>
-    
-    <!-- 手機版虛擬搖桿 -->
-    <!-- 加入這段在 body 裡面 -->
-    <div id="joystick" class="joystick" style="display: none;">
+    <div id="joystick" class="joystick" style="display:none;">
       <div id="joystickKnob" class="joystick-knob"></div>
     </div>
-
   </div>
 
-  <script src="script.js"></script>
-</body>  
-  <style>
-    #tip-box {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: yellow;
-      font-family: sans-serif;
-      font-size: 14px;
-      padding: 6px 10px;
-      border-radius: 5px;
-      pointer-events: none; /* 不擋滑鼠操作 */
-      user-select: none;
-    }  
-  </style>
-</html>
+  <!-- ✅ 提示盒放在 body 裡，固定右上角 -->
+  <div id="tip-box"></div>
+
+  <!-- ✅ 路徑要對：若你的檔名是 main.js 就改成 main.js -->
+  <script src="main.js"></script>
+</body>
