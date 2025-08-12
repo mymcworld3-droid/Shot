@@ -503,9 +503,9 @@ class Player {
     const barW = 40, barH = 6;
     const hpPct = Math.max(0, Math.min(1, (this.hp ?? 10) / 10));
     ctx.fillStyle = '#000';
-    ctx.fillRect(this.x - barW/2, this.y - this.radius - 20, barW, barH);
+    ctx.fillRect(this.x - barW/2, this.y - this.radius - 5, barW, barH);
     ctx.fillStyle = '#27ae60';
-    ctx.fillRect(this.x - barW/2, this.y - this.radius - 20, barW * hpPct, barH);
+    ctx.fillRect(this.x - barW/2, this.y - this.radius - 5, barW * hpPct, barH);
   }
 }
 
