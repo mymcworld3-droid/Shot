@@ -176,7 +176,7 @@ wss.on('connection', (ws) => {
 
           const startsEx = (p.displayName || '').startsWith(' Ex'); // 是否 ex 前綴
           if (startsEx) {
-            const dirs = getFanDirections(data.directionX, data.directionY, 65, 2);
+            const dirs = getFanDirections(data.directionX, data.directionY, 30, 2);
             for (const d of dirs) {
               const proj = {
                 id: Math.random().toString(36).substr(2, 9),
