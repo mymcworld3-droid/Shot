@@ -20,6 +20,7 @@ class Game {
     this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
+    this.hp = hp;
     this.joystick = {
       active: false,
       startX: 0,
@@ -68,7 +69,7 @@ class Game {
         // 建立其它玩家（用 displayName 當頭上名字）
         data.players.forEach(p => {
           if (p.id !== this.playerNetId) {
-            this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName));
+            this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName, p.hp ?? 10));
           }
         });
         break;
@@ -76,7 +77,7 @@ class Game {
         if (data.player.id !== this.playerNetId) {
           this.otherPlayers.set(
             data.player.id,
-            new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName)
+            new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName, data.player.hp ?? 10)
           );
         }
         break;
@@ -110,6 +111,16 @@ class Game {
           time: Date.now()
         });
         break;
+      case 'hpUpdate': {
+        const id = data.playerId;
+        const newHp = data.hp;
+        if (id === this.playerNetId && this.player) {
+          this.player.hp = newHp;
+        } else if (this.otherPlayers.has(id)) {
+          this.otherPlayers.get(id).hp = newHp;
+        }
+        break;
+      }
       case 'playerHit': {
         const victimId = data.playerId;
         const killerId = data.killerId;
@@ -339,19 +350,21 @@ class Game {
 
   checkCollisions() {
     for (let proj of this.projectiles) {
-      if (proj.playerId !== this.playerNetId) {
+      if (proj.playerId !== this.playerNetId) {  
         const dist = Math.hypot(proj.x - this.player.x, proj.y - this.player.y);
         if (dist < this.player.radius + proj.radius) {
-          // 告訴 server 我死了
+          // 回報命中給伺服器，交由伺服器扣血／判死亡
           if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({
-              type: 'playerHit',
-              playerId: this.playerNetId,
-              killerId: proj.playerId
+              type: 'playerDamaged',
+              victimId: this.playerNetId,
+              shooterId: proj.playerId,
+              projectileId: proj.id
             }));
           }
-          this.playerHit();
-          return;
+          // 客戶端先把這顆子彈移除，避免多次觸發（伺服器也會廣播正式移除）  
+          this.projectiles = this.projectiles.filter(p => p.id !== proj.id);
+          return; // 一次處理一顆就好
         }
       }
     }
@@ -487,6 +500,13 @@ class Player {
       ctx.textAlign = 'center';
       ctx.fillText(this.id, this.x, this.y - this.radius - 10);
     }
+    // 血條（可選）
+    const barW = 40, barH = 6;
+    const hpPct = Math.max(0, Math.min(1, (this.hp ?? 10) / 10));
+    ctx.fillStyle = '#000';
+    ctx.fillRect(this.x - barW/2, this.y - this.radius - 20, barW, barH);
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(this.x - barW/2, this.y - this.radius - 20, barW * hpPct, barH);
   }
 }
 
