@@ -58,7 +58,7 @@ function computeBulletRadiusById(netId) {
   return (name.startsWith('    ') && name.endsWith('    ')) ? 8 : 5;
 }
 
-function getFanDirections(baseDx, baseDy, totalDeg = 45, count = 4) {
+function getFanDirections(baseDx, baseDy, totalDeg = 65, count = 4) {
   // 正規化
   const len = Math.hypot(baseDx, baseDy) || 1;
   const ux = baseDx / len;
