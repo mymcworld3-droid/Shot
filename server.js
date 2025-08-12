@@ -165,7 +165,7 @@ wss.on('connection', (ws) => {
             type: 'playerJoined',
             player: {
               id: finalId,
-              displayName: displayToClients(p.displayName),
+              displayName: displayToClients(ws._displayName),
               x: data.x,
               y: data.y,
               directionX: 0,
