@@ -502,7 +502,7 @@ class Player {
     // 血條（可選）
     const barW = 40, barH = 6;
     const hpPct = Math.max(0, Math.min(1, (this.hp ?? 10) / 10));
-    const barY = this.y - this.radius - 30;
+    const barY = this.y - this.radius - 5;
     ctx.fillStyle = '#000';
     ctx.fillRect(this.x - barW/2, barY, barW, barH);
     ctx.fillStyle = '#27ae60';
