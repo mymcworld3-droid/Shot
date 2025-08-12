@@ -100,7 +100,8 @@ class Game {
           data.projectile.directionX,
           data.projectile.directionY,
           data.projectile.playerId,
-          data.projectile.radius || 5
+          data.projectile.radius || 5,
+          data.projectile.speed || 10
         ));
         break;
       case 'systemMessage':
@@ -490,11 +491,11 @@ class Player {
 }
 
 class Projectile {
-  constructor(x, y, directionX, directionY, playerId,radius = 5) {
+  constructor(x, y, directionX, directionY, playerId,radius = 5, speed = 10) {
     this.x = x;
     this.y = y;
     this.radius = radius;
-    this.speed = 10;
+    this.speed = speed;
     this.directionX = directionX;
     this.directionY = directionY;
     this.color = '#e74c3c';
