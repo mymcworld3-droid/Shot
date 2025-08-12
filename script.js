@@ -1,6 +1,4 @@
 
-const wsUrl = `wss://${window.location.host}`;
-
 class Game {
   constructor() {
     this.canvas = null;
@@ -20,7 +18,6 @@ class Game {
     this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
-    this.hp = hp;
     this.joystick = {
       active: false,
       startX: 0,
@@ -102,7 +99,8 @@ class Game {
           data.projectile.directionY,
           data.projectile.playerId,
           data.projectile.radius || 5,
-          data.projectile.speed || 10
+          data.projectile.speed || 10,
+          data.projectile.id
         ));
         break;
       case 'systemMessage':
@@ -449,7 +447,7 @@ class Game {
 }
 
 class Player {
-  constructor(x, y, color = '#3498db',id='') {
+  constructor(x, y, color = '#3498db',id='',hp = 10) {
     this.x = x;
     this.y = y;
     this.radius = 20;
@@ -457,6 +455,7 @@ class Player {
     this.directionX = 0;
     this.directionY = 0;
     this.id = id;
+    this.hp = hp;
   }
 
   move(dx, dy) {
@@ -511,7 +510,7 @@ class Player {
 }
 
 class Projectile {
-  constructor(x, y, directionX, directionY, playerId,radius = 5, speed = 10) {
+  constructor(x, y, directionX, directionY, playerId,radius = 5, speed = 10, id = null) {
     this.x = x;
     this.y = y;
     this.radius = radius;
@@ -520,6 +519,7 @@ class Projectile {
     this.directionY = directionY;
     this.color = '#e74c3c';
     this.playerId = playerId;
+    this.id = id;
   }
 
   update() {
