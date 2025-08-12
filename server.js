@@ -66,6 +66,12 @@ function isExName(name) {
 function hasDefInName(name) {
   return typeof name === 'string' && name.toLowerCase().includes('def');
 }
+function hideDefInName(name) {
+  return typeof name === 'string'
+    ? name.replace(/def/gi, '')
+    : name;
+}
+
 function computeDamageByShooter(id) {
   const p = players.get(id);
   const name = p?.displayName || '';
@@ -104,7 +110,7 @@ wss.on('connection', (ws) => {
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
               id: p.id,
-              displayName: p.displayName,
+              displayName: hideDefInName(ws._displayName),
               x: p.x, y: p.y,
               directionX: p.directionX, directionY: p.directionY,
               hp: p.hp
@@ -134,13 +140,13 @@ wss.on('connection', (ws) => {
             lastHitAt: Date.now(),
           });
 
-          ws.send(JSON.stringify({ type: 'joinAck', id: finalId, displayName: ws._displayName }));
+          ws.send(JSON.stringify({ type: 'joinAck', id: finalId, displayName: hideDefInName(ws._displayName) }));
 
           ws.send(JSON.stringify({
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
               id: p.id,
-              displayName: p.displayName,
+              displayName: hideDefInName(ws._displayName),
               x: p.x,
               y: p.y,
               directionX: p.directionX,
@@ -153,7 +159,7 @@ wss.on('connection', (ws) => {
             type: 'playerJoined',
             player: {
               id: finalId,
-              displayName: ws._displayName,
+              displayName: hideDefInName(ws._displayName),
               x: data.x,
               y: data.y,
               directionX: 0,
