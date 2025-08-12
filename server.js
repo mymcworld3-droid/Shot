@@ -112,7 +112,9 @@ wss.on('connection', (ws) => {
             y: data.y,
             directionX: 0,
             directionY: 0,
-            ws
+            ws,
+            hp: 10,
+            lastHitAt: Date.now(),
           });
 
           ws.send(JSON.stringify({ type: 'joinAck', id: finalId, displayName: ws._displayName }));
