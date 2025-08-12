@@ -71,6 +71,12 @@ function hideDefInName(name) {
     ? name.replace(/def/gi, '')
     : name;
 }
+function displayToClients(name) {
+  const cleaned = hideDefInName(name || '');
+  const trimmed = cleaned.trim();
+  // 若整個名字都被移掉（全是 def 或空白），給一個預設顯示名稱
+  return trimmed.length ? cleaned : '(玩家)';
+}
 
 function computeDamageByShooter(id) {
   const p = players.get(id);
@@ -110,7 +116,7 @@ wss.on('connection', (ws) => {
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
               id: p.id,
-              displayName: hideDefInName(ws._displayName),
+              displayName: displayToClients(p.displayName),
               x: p.x, y: p.y,
               directionX: p.directionX, directionY: p.directionY,
               hp: p.hp
@@ -146,7 +152,7 @@ wss.on('connection', (ws) => {
             type: 'currentPlayers',
             players: Array.from(players.values()).map(p => ({
               id: p.id,
-              displayName: hideDefInName(ws._displayName),
+              displayName: displayToClients(p.displayName),
               x: p.x,
               y: p.y,
               directionX: p.directionX,
@@ -159,11 +165,12 @@ wss.on('connection', (ws) => {
             type: 'playerJoined',
             player: {
               id: finalId,
-              displayName: hideDefInName(ws._displayName),
+              displayName: displayToClients(p.displayName),
               x: data.x,
               y: data.y,
               directionX: 0,
-              directionY: 0
+              directionY: 0,
+              hp: 10
             }
           }, finalId);
           break;
@@ -240,7 +247,7 @@ wss.on('connection', (ws) => {
           if (!players.has(victimId) || !players.has(shooterId)) break;
 
           const victim = players.get(victimId);
-          const dmg = computeDamageByShooter(shooterId);
+          let dmg = computeDamageByShooter(shooterId);
 
           if (projectileId) {
             const proj = projectiles.find(p => p.id === projectileId);
