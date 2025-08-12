@@ -1,24 +1,3 @@
-const tips = [
-  "如果名字前後加四個空白會有驚喜！",
-  "不如在名字前加個ex試試！",
-  "預判是重點！",
-  "蝦打是殺人的精髓！",
-  "打到他人會扣血",
-  "來比比手速吧！",
-  "不妨試試 tetrischjhs.netlify.app！"
-];
-
-function updateTip() {
-  const tipBox = document.getElementById("tip-box");
-  if (!tipBox) return;
-  const randomTip = tips[Math.floor(Math.random() * tips.length)];
-  tipBox.textContent = randomTip;
-}
-
-// 進入頁面立即顯示一次
-updateTip();
-// 每 5 秒換一次
-setInterval(updateTip, 5000);
 
 class Game {
   constructor() {
@@ -53,6 +32,25 @@ class Game {
     this.setupCanvas();
     this.setupEventListeners();
     this.initSocket();
+    this.initTips(); 
+  }
+  initTips() {                      // ✅ 新增方法
+    const tips = [
+      "如果名字前後加四個空白會有驚喜！",
+      "不如在名字前加個ex試試！",
+      "預判是重點！",
+      "蝦打是殺人的精髓！",
+      "打到他人會扣血",
+      "來比比手速吧！",
+      "不妨試試 tetrischjhs.netlify.app！"
+    ];
+    const tipBox = document.getElementById("tip-box");
+    if (!tipBox) return;
+    const update = () => {
+      tipBox.textContent = tips[Math.floor(Math.random() * tips.length)];
+    };
+    update();
+    setInterval(update, 5000);
   }
 
   initSocket() {
