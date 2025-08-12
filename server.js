@@ -63,6 +63,9 @@ function isSpaced(name) {
 function isExName(name) {
   return /^ex/i.test(name);  // 不分大小寫
 }
+function hasDefInName(name) {
+  return typeof name === 'string' && name.toLowerCase().includes('def');
+}
 function computeDamageByShooter(id) {
   const p = players.get(id);
   const name = p?.displayName || '';
@@ -233,6 +236,17 @@ wss.on('connection', (ws) => {
           const victim = players.get(victimId);
           const dmg = computeDamageByShooter(shooterId);
 
+          if (projectileId) {
+            const proj = projectiles.find(p => p.id === projectileId);
+            if (proj && typeof proj.damage === 'number') {
+              dmg = proj.damage;
+            }
+          }
+
+          // ✅ 受擊者名字含 def → 傷害減半（無條件進位）
+          if (hasDefInName(victim.displayName)) {
+            dmg = Math.ceil(dmg / 2);
+          }
           victim.hp = Math.max(0, victim.hp - dmg);
           victim.lastHitAt = Date.now();
 
