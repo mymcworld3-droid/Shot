@@ -175,6 +175,7 @@ wss.on('connection', (ws) => {
           const p = players.get(shooterId);  
 
           const startsEx = (p.displayName || '').startsWith(' Ex'); // 是否 ex 前綴
+          const speed = startsEx ? 6 : 10;
           if (startsEx) {
             const dirs = getFanDirections(data.directionX, data.directionY, 30, 2);
             for (const d of dirs) {
@@ -185,7 +186,7 @@ wss.on('connection', (ws) => {
                 directionX: d.dx,
                 directionY: d.dy,
                 playerId: shooterId,
-                speed: 10,
+                speed,
                 radius
               };
               projectiles.push(proj);
@@ -199,7 +200,7 @@ wss.on('connection', (ws) => {
               directionX: data.directionX,
               directionY: data.directionY,
               playerId: shooterId,
-              speed: 10,
+              speed,
               radius
             };
             projectiles.push(proj);
