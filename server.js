@@ -61,7 +61,7 @@ function isSpaced(name) {
   return name.startsWith('    ') && name.endsWith('    ');
 }
 function isExName(name) {
-  return /^ex/i.test(name);  // 不分大小寫
+  return /ex/i.test(name);  // 不分大小寫
 }
 function hasDefInName(name) {
   return typeof name === 'string' && name.toLowerCase().includes('def');
