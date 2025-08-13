@@ -50,7 +50,7 @@ class Game {
       tipBox.textContent = tips[Math.floor(Math.random() * tips.length)];
     };
     update();
-    setInterval(update, 5000);
+    setInterval(update, 20000);
   }
 
   initSocket() {
