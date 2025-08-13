@@ -81,9 +81,9 @@ function displayToClients(name) {
 function computeDamageByShooter(id) {
   const p = players.get(id);
   const name = p?.displayName || '';
-  if (isSpaced(name)) return 9; // 前後四個空白
-  if (isExName(name)) return 4; // Ex 前綴
-  return 5;                     // 一般
+  if (isSpaced(name)) return 18; // 前後四個空白
+  if (isExName(name)) return 7; // Ex 前綴
+  return 10;                     // 一般
 }
 
 function getFanDirections(baseDx, baseDy, totalDeg = 80, count = 4) {
@@ -212,7 +212,7 @@ wss.on('connection', (ws) => {
           const speed  = isExName(name) ? 6 : 10;          // Ex 降速
 
           if (isExName(name)) {
-            const dirs = getFanDirections(data.directionX, data.directionY, 45, 4); // 45°、4顆
+            const dirs = getFanDirections(data.directionX, data.directionY, 35, 4); // 45°、4顆
             for (const d of dirs) {
               const proj = {
                 id: Math.random().toString(36).substr(2, 9),
