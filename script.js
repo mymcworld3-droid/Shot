@@ -1,3 +1,9 @@
+// ✅ 在檔案上方 Game class 前面加這個工具函數
+function hideDefInName(name) {
+  return typeof name === 'string'
+    ? name.replace(/def/gi, '')
+    : name;
+}
 
 class Game {
   constructor() {
@@ -516,7 +522,7 @@ class Player {
       ctx.fillStyle = 'white';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(this.id, this.x, this.y - this.radius - 10);
+      ctx.fillText(hideDefInName(this.id), this.x, this.y - this.radius - 10);
     }
     // 血條（可選）
     const barW = 40, barH = 6;
