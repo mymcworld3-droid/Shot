@@ -218,60 +218,89 @@ class Game {
   }
 
   setupTouchControls() {
-    const joystick = document.getElementById('joystick');
-    const knob = document.getElementById('joystickKnob');
-    let touchId = null;
+    const moveJoystick = document.getElementById('moveJoystick');
+    const moveKnob = document.getElementById('moveKnob');
+    const shootJoystick = document.getElementById('shootJoystick');
+    const shootKnob = document.getElementById('shootKnob');
+
+    const joysticks = {
+      move: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 },
+      shoot: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }
+    };
+
+    let touchMap = {}; // 紀錄手指 id 對應哪個搖桿
 
     document.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        touchId = touch.identifier;
-        this.joystick.startX = this.joystick.currentX = touch.clientX;
-        this.joystick.startY = this.joystick.currentY = touch.clientY;
-        this.joystick.active = true;
-        joystick.style.display = 'block';
-        joystick.style.left = `${touch.clientX - 60}px`;
-        joystick.style.top = `${touch.clientY - 60}px`;
+      for (let touch of e.changedTouches) {
+         const x = touch.clientX;
+        const y = touch.clientY;
+        if (x < window.innerWidth / 2) {
+          // 左半螢幕 → 移動
+          joysticks.move.active = true;
+          joysticks.move.startX = joysticks.move.currentX = x;
+          joysticks.move.startY = joysticks.move.currentY = y;
+          moveJoystick.style.display = 'block';
+          moveJoystick.style.left = `${x - 60}px`;
+          moveJoystick.style.top = `${y - 60}px`;
+          touchMap[touch.identifier] = 'move';
+        } else {
+          // 右半螢幕 → 射擊
+          joysticks.shoot.active = true;
+          joysticks.shoot.startX = joysticks.shoot.currentX = x;
+          joysticks.shoot.startY = joysticks.shoot.currentY = y;
+          shootJoystick.style.display = 'block';
+          shootJoystick.style.left = `${x - 60}px`;
+          shootJoystick.style.top = `${y - 60}px`;
+          touchMap[touch.identifier] = 'shoot';
+        }
       }
     });
 
     document.addEventListener('touchmove', (e) => {
       for (let touch of e.touches) {
-        if (touch.identifier === touchId && this.joystick.active) {
-          this.joystick.currentX = touch.clientX;
-          this.joystick.currentY = touch.clientY;
-          this.updateJoystickKnob(knob);
-          e.preventDefault();
-        }
+        const type = touchMap[touch.identifier];
+        if (!type) continue;
+        joysticks[type].currentX = touch.clientX;
+        joysticks[type].currentY = touch.clientY;
+        this.updateJoystickKnob(type === 'move' ? moveKnob : shootKnob, joysticks[type]);
+        e.preventDefault();
       }
     });
 
     document.addEventListener('touchend', (e) => {
       for (let touch of e.changedTouches) {
-        if (touch.identifier === touchId) {
-          this.joystick.active = false;
-          touchId = null;
-          knob.style.transform = 'translate(-50%, -50%)';
-          joystick.style.display = 'none';
-          if (this.isRunning) this.shoot();
-          break;
-        }
+        const type = touchMap[touch.identifier];
+        if (!type) continue;
+        joysticks[type].active = false;
+        delete touchMap[touch.identifier];
+        const knob = type === 'move' ? moveKnob : shootKnob;
+        const joystickEl = type === 'move' ? moveJoystick : shootJoystick;
+        knob.style.transform = 'translate(-50%, -50%)';
+        joystickEl.style.display = 'none';
+
+        // 射擊搖桿放開 → 發射一次子彈
+        if (type === 'shoot' && this.isRunning) this.shoot();
       }
     });
+
+    // 保存 joysticks 物件給 updatePlayer() 使用
+    this.joysticks = joysticks;
   }
 
-  updateJoystickKnob(knob) {
-    const deltaX = this.joystick.currentX - this.joystick.startX;
-    const deltaY = this.joystick.currentY - this.joystick.startY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  // 更新搖桿旋鈕位置
+  updateJoystickKnob(knob, joy) {
+    const dx = joy.currentX - joy.startX;
+    const dy = joy.currentY - joy.startY;
+    const distance = Math.sqrt(dx*dx + dy*dy);
     const maxDistance = 40;
     if (distance <= maxDistance) {
-      knob.style.transform = `translate(${deltaX - 20}px, ${deltaY - 20}px)`;
+      knob.style.transform = `translate(${dx-20}px, ${dy-20}px)`;
     } else {
-      const angle = Math.atan2(deltaY, deltaX);
-      knob.style.transform = `translate(${Math.cos(angle) * maxDistance - 20}px, ${Math.sin(angle) * maxDistance - 20}px)`;
+      const angle = Math.atan2(dy, dx);
+      knob.style.transform = `translate(${Math.cos(angle)*maxDistance-20}px, ${Math.sin(angle)*maxDistance-20}px)`;
     }
   }
+
 
   startGame() {
     
@@ -322,21 +351,26 @@ class Game {
 
   updatePlayer() {
     if (!this.player) return;
-    if (this.isMobile) {
-      if (this.joystick.active){
-        const dx = this.joystick.currentX - this.joystick.startX;
-        const dy = this.joystick.currentY - this.joystick.startY;
-        const len = Math.sqrt(dx * dx + dy * dy);
+    if (this.isMobile && this.joysticks) {
+      // 左半螢幕 → 移動
+      const move = this.joysticks.move; 
+      if (move.active) {
+        const dx = move.currentX - move.startX;
+        const dy = move.currentY - move.startY;
+        const len = Math.hypot(dx, dy);
         if (len > 0) {
-          const maxSpeed = 8;
-          const normX = dx / len; 
-          const normY = dy / len;
-          const speed = Math.min(len * 0.1, maxSpeed);
-          this.player.move(normX * speed, normY * speed);
-          this.player.setDirection(dx, dy);
-        } 
+          const speed = Math.min(len * 0.1, 8);
+          this.player.move((dx/len)*speed, (dy/len)*speed);
+        }
       }
-    } else {
+      // 右半螢幕 → 射擊方向
+      const shoot = this.joysticks.shoot;
+      if (shoot.active) {
+        const dx = shoot.currentX - shoot.startX;
+        const dy = shoot.currentY - shoot.startY;
+        this.player.setDirection(dx, dy);
+      }
+    }else{
       let mx = 0, my = 0;
       if (this.keys['w'] || this.keys['arrowup']) my -= 1;
       if (this.keys['s'] || this.keys['arrowdown']) my += 1;
