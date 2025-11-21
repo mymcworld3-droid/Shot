@@ -1,114 +1,27 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; font-family:'Arial', sans-serif; overflow:hidden; }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* 主頁面 & 遊戲畫面 */
+.screen { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.hidden { display:none !important; }
+#mainMenu { position:relative; z-index:1; background:linear-gradient(135deg,#667eea,#764ba2); border-radius:15px; padding:40px 60px; box-shadow:0 8px 20px rgba(0,0,0,0.4); color:white; }
+#mainMenu h1 { font-size:3rem; margin-bottom:2rem; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
+.start-button { padding:15px 30px; font-size:1.6rem; background:linear-gradient(45deg,#4CAF50,#2ecc71); border:none; border-radius:10px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2); transition:0.3s; color:white; }
+.start-button:hover { background:linear-gradient(45deg,#45a049,#27ae60); }
+#gameScreen { z-index:2; background:#2c3e50; }
+#gameCanvas { background:#34495e; border:2px solid #2c3e50; }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  font-family: 'Arial', sans-serif;
-  overflow: hidden;
-}
+/* 提示盒 */
+#tip-box { position:fixed; top:10px; right:15px; z-index:9999; background:rgba(0,0,0,.6); color:yellow; font-size:14px; padding:6px 10px; border-radius:5px; pointer-events:none; text-shadow:1px 1px 2px black; }
 
-.screen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+/* 搖桿 */
+.joystick { position:absolute; width:120px; height:120px; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.4); border-radius:50%; display:block; }
+.joystick-knob { position:absolute; top:50%; left:50%; width:40px; height:40px; background:rgba(255,255,255,0.8); border-radius:50%; transform:translate(-50%,-50%); transition:all 0.1s ease; }
 
-.hidden {
-  display: none !important;
-}
-
-/* 主頁面樣式 */
-#mainMenu {
-  position: relative;  /* ✅ 確保可以蓋在預覽上面 */
-  z-index: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  backdrop-filter: blur(2px);
-}
-#gameScreen {
-  z-index: 2;                      /* 進入遊戲後，遊戲畫面最高層 */
-}
-#mainMenu h1 {
-  font-size: 3rem;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.start-button {
-  padding: 15px 30px;
-  font-size: 1.5rem;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.start-button:hover {
-  background: #45a049;
-}
-
-/* 遊戲畫面樣式 */
-#gameScreen {
-  background: #2c3e50;
-}
-
-#gameCanvas {
-  background: #34495e;
-  border: 2px solid #2c3e50;
-}
-
-/* 虛擬搖桿樣式 */
-#moveJoystick { left: 50px; bottom: 50px; }
-#shootJoystick { right: 50px; bottom: 50px; }
-
-.joystick {
-  position: absolute;
-  bottom: 50px;
-  left: 50px;
-  width: 120px;
-  height: 120px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  display: block;
-}
-
-.joystick-knob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: all 0.1s ease;
-}
-#tip-box{
-  position: fixed;      /* 右上角固定 */
-  top: 10px;
-  right: 15px;
-  z-index: 9999;        /* 蓋過 canvas */
-  background: rgba(0,0,0,.6);
-  color: yellow;
-  font-family: sans-serif;
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 5px;
-  pointer-events: none;
-  user-select: none;
-}
-
+/* 左下角聊天室 */
+#chatBox { position:fixed; bottom:20px; left:20px; width:250px; max-height:300px; display:flex; flex-direction:column; background:rgba(0,0,0,0.6); border-radius:10px; overflow:hidden; z-index:10000; font-family:Arial,sans-serif; }
+#chatMessages { flex:1; padding:10px; overflow-y:auto; color:white; font-size:13px; }
+#chatMessages .msg { margin-bottom:6px; }
+#chatMessages .msg .name { font-weight:bold; color:#ffeb3b; margin-right:4px; }
+#chatInput { border:none; outline:none; padding:8px 10px; font-size:13px; border-top:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.1); color:white; }
+#chatInput::placeholder { color:rgba(255,255,255,0.5); }
