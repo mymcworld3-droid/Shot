@@ -71,6 +71,9 @@ html, body {
 }
 
 /* 虛擬搖桿樣式 */
+#moveJoystick { left: 50px; bottom: 50px; }
+#shootJoystick { right: 50px; bottom: 50px; }
+
 .joystick {
   position: absolute;
   bottom: 50px;
