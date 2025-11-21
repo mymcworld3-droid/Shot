@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>破炮塔大戰</title>
+  <title>chjhs shooter</title>
   <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -20,61 +20,11 @@
     <div id="joystick" class="joystick" style="display:none;">
       <div id="joystickKnob" class="joystick-knob"></div>
     </div>
-    <!-- 聊天室 -->
-    <div id="chatBox">
-      <div id="chatMessages"></div>
-      <input type="text" id="chatInput" placeholder="輸入訊息..." />
-    </div>
   </div>
 
-  <!-- 提示盒 -->
+  <!-- ✅ 提示盒放在 body 裡，固定右上角 -->
   <div id="tip-box"></div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB132hSQq7DaHqvGhvvuLxxOM4tE7qATl8",
-      authDomain: "all-game-6c562.firebaseapp.com",
-      databaseURL: "https://all-game-6c562-default-rtdb.firebaseio.com",
-      projectId: "all-game-6c562",
-      storageBucket: "all-game-6c562.appspot.com",
-      messagingSenderId: "486227925026",
-      appId: "1:486227925026:web:201f63385c470cc24dd27b",
-      measurementId: "G-QMGXNJDBJZ"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const chatRef = ref(db, 'chat');
-
-    // 監聽聊天室訊息
-    onChildAdded(chatRef, (snapshot) => {
-      const msg = snapshot.val();
-      const div = document.createElement('div');
-      div.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
-      document.getElementById('chatMessages').appendChild(div);
-      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-    });
-
-    // 發送訊息
-    const chatInput = document.getElementById('chatInput');
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && chatInput.value.trim() !== '') {
-        if (!window.game) return;
-        push(chatRef, {
-          name: window.game.playerName,
-          text: chatInput.value.trim(),
-          time: Date.now()
-        });
-        chatInput.value = '';
-      }
-    });
-  </script>
-
-  <!-- 遊戲程式 -->
+  <!-- ✅ 路徑要對：若你的檔名是 main.js 就改成 main.js -->
   <script src="script.js"></script>
 </body>
-</html>
