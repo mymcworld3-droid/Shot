@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>chjhs shooter</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <title>破炮塔大戰</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
   <!-- 主頁面 -->
@@ -17,18 +20,23 @@
   <!-- 遊戲畫面 -->
   <div id="gameScreen" class="screen hidden">
     <canvas id="gameCanvas"></canvas>
-    <!-- 左邊移動搖桿 -->
-    <div id="moveJoystick" class="joystick" style="display:none;">
-      <div id="moveKnob" class="joystick-knob"></div>
+    <div id="joystickMove" class="joystick" style="display:none;">
+      <div class="joystick-knob"></div>
     </div>
-    <!-- 右邊射擊搖桿 -->
-    <div id="shootJoystick" class="joystick" style="display:none;">
-      <div id="shootKnob" class="joystick-knob"></div>
+    <div id="joystickShoot" class="joystick" style="display:none;">
+      <div class="joystick-knob"></div>
     </div>
   </div>
-  <!-- ✅ 提示盒放在 body 裡，固定右上角 -->
+
+  <!-- 聊天室 -->
+  <div id="chatBox">
+    <div id="chatMessages"></div>
+    <input type="text" id="chatInput" placeholder="輸入訊息並按 Enter" />
+  </div>
+
+  <!-- 提示盒 -->
   <div id="tip-box"></div>
 
-  <!-- ✅ 路徑要對：若你的檔名是 main.js 就改成 main.js -->
   <script src="script.js"></script>
 </body>
+</html>
