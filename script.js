@@ -231,27 +231,38 @@ class Game {
 
   update() {
     if(!this.player) return;
-    if(this.isMobile && !this.joystick.active) this.shoot(); // 放開搖桿射擊
-    else if(!this.isMobile){
-      let mx=0,my=0;
-      if(this.keys['w']||this.keys['arrowup']) my-=1;
-      if(this.keys['s']||this.keys['arrowdown']) my+=1;
-      if(this.keys['a']||this.keys['arrowleft']) mx-=1;
-      if(this.keys['d']||this.keys['arrowright']) mx+=1;
-      this.player.move(mx*5,my*5);
-      const dx=this.mousePos.x-this.player.x;
-      const dy=this.mousePos.y-this.player.y;
+
+    // 移動
+    let mx=0,my=0;
+    if(this.keys['w']||this.keys['arrowup']) my-=1;
+    if(this.keys['s']||this.keys['arrowdown']) my+=1;
+    if(this.keys['a']||this.keys['arrowleft']) mx-=1;
+    if(this.keys['d']||this.keys['arrowright']) mx+=1;
+    this.player.move(mx*5,my*5);
+
+    // 設定方向（滑鼠或搖桿）
+    if(!this.isMobile){
+      const dx=this.mousePos.x - this.player.x;
+      const dy=this.mousePos.y - this.player.y;
       this.player.setDirection(dx,dy);
     }
+
+    // 移動後發送位置更新
     if(this.socket && this.socket.readyState===WebSocket.OPEN && this.playerNetId){
       this.socket.send(JSON.stringify({
         type:'playerUpdate',
         playerId:this.playerNetId,
-        x:this.player.x, y:this.player.y,
-        directionX:this.player.directionX, directionY:this.player.directionY
+        x:this.player.x,
+        y:this.player.y,
+        directionX:this.player.directionX,
+        directionY:this.player.directionY
       }));
     }
 
+    // 射擊邏輯
+    if(this.isMobile && !this.joystick.active) this.shoot();
+
+    // 更新子彈
     for(let i=this.projectiles.length-1;i>=0;i--){
       const proj=this.projectiles[i]; proj.update();
       if(proj.x<0||proj.x>this.mapWidth||proj.y<0||proj.y>this.mapHeight) this.projectiles.splice(i,1);
@@ -284,18 +295,28 @@ class Game {
   }
 
   shoot() {
-    if(!this.playerNetId || !this.socket || this.socket.readyState!==WebSocket.OPEN) return;
-    let bulletRadius = 5; if(this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) bulletRadius=10;
+    if (!this.playerNetId || !this.socket || this.socket.readyState !== WebSocket.OPEN || !this.player) return;
+
+    let dx = this.player.directionX;
+    let dy = this.player.directionY;
+    if(dx===0 && dy===0) { dx=0; dy=-1; } // 零方向預設向上
+
+    let bulletRadius = 5;
+    if(this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) bulletRadius=10;
+
     this.socket.send(JSON.stringify({
-      type:'shoot',
-      x:this.player.x, y:this.player.y,
-      directionX:this.player.directionX, directionY:this.player.directionY,
-      playerId:this.playerNetId,
-      radius:bulletRadius
+      type: 'shoot',
+      x: this.player.x,
+      y: this.player.y,
+      directionX: dx,
+      directionY: dy,
+      playerId: this.playerNetId,
+      radius: bulletRadius
     }));
   }
 
-  playerHit() { this.killCounts.set(this.playerNetId,0); this.isRunning=false;
+  playerHit() {
+    this.killCounts.set(this.playerNetId,0); this.isRunning=false;
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
     this.otherPlayers.clear(); this.projectiles=[]; this.player=null;
@@ -303,7 +324,32 @@ class Game {
 
   // ------------------ Firebase 聊天整合 ------------------
   initFirebase(){
-    // Firebase 已在 index.html module import
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    if (!chatMessages || !chatInput || !sendBtn) return;
+
+    // 發送訊息
+    sendBtn.onclick = () => {
+      const msg = chatInput.value.trim();
+      if (!msg || !this.playerName) return;
+      firebase.database().ref('chat').push({
+        name: this.playerName,
+        msg,
+        time: Date.now()
+      });
+      chatInput.value = '';
+    };
+
+    // 監聽新訊息
+    firebase.database().ref('chat').on('child_added', snap => {
+      const { name, msg } = snap.val();
+      const div = document.createElement('div');
+      div.textContent = `${name}: ${msg}`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
   }
 }
 
