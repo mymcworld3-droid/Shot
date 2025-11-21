@@ -1,13 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>破炮塔大戰</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
   <!-- 主頁面 -->
@@ -20,23 +17,64 @@
   <!-- 遊戲畫面 -->
   <div id="gameScreen" class="screen hidden">
     <canvas id="gameCanvas"></canvas>
-    <div id="joystickMove" class="joystick" style="display:none;">
-      <div class="joystick-knob"></div>
+    <div id="joystick" class="joystick" style="display:none;">
+      <div id="joystickKnob" class="joystick-knob"></div>
     </div>
-    <div id="joystickShoot" class="joystick" style="display:none;">
-      <div class="joystick-knob"></div>
+    <!-- 聊天室 -->
+    <div id="chatBox">
+      <div id="chatMessages"></div>
+      <input type="text" id="chatInput" placeholder="輸入訊息..." />
     </div>
-  </div>
-
-  <!-- 聊天室 -->
-  <div id="chatBox">
-    <div id="chatMessages"></div>
-    <input type="text" id="chatInput" placeholder="輸入訊息並按 Enter" />
   </div>
 
   <!-- 提示盒 -->
   <div id="tip-box"></div>
 
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB132hSQq7DaHqvGhvvuLxxOM4tE7qATl8",
+      authDomain: "all-game-6c562.firebaseapp.com",
+      databaseURL: "https://all-game-6c562-default-rtdb.firebaseio.com",
+      projectId: "all-game-6c562",
+      storageBucket: "all-game-6c562.appspot.com",
+      messagingSenderId: "486227925026",
+      appId: "1:486227925026:web:201f63385c470cc24dd27b",
+      measurementId: "G-QMGXNJDBJZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const chatRef = ref(db, 'chat');
+
+    // 監聽聊天室訊息
+    onChildAdded(chatRef, (snapshot) => {
+      const msg = snapshot.val();
+      const div = document.createElement('div');
+      div.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
+      document.getElementById('chatMessages').appendChild(div);
+      document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    });
+
+    // 發送訊息
+    const chatInput = document.getElementById('chatInput');
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && chatInput.value.trim() !== '') {
+        if (!window.game) return;
+        push(chatRef, {
+          name: window.game.playerName,
+          text: chatInput.value.trim(),
+          time: Date.now()
+        });
+        chatInput.value = '';
+      }
+    });
+  </script>
+
+  <!-- 遊戲程式 -->
   <script src="script.js"></script>
 </body>
 </html>
