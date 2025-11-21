@@ -17,11 +17,15 @@
   <!-- 遊戲畫面 -->
   <div id="gameScreen" class="screen hidden">
     <canvas id="gameCanvas"></canvas>
-    <div id="joystick" class="joystick" style="display:none;">
-      <div id="joystickKnob" class="joystick-knob"></div>
+    <!-- 左邊移動搖桿 -->
+    <div id="moveJoystick" class="joystick" style="display:none;">
+      <div id="moveKnob" class="joystick-knob"></div>
+    </div>
+    <!-- 右邊射擊搖桿 -->
+    <div id="shootJoystick" class="joystick" style="display:none;">
+      <div id="shootKnob" class="joystick-knob"></div>
     </div>
   </div>
-
   <!-- ✅ 提示盒放在 body 裡，固定右上角 -->
   <div id="tip-box"></div>
 
