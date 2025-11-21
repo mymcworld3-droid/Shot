@@ -1,12 +1,12 @@
 // ✅ Firebase 初始化
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB132hSQq7DaHqvGhvvuLxxOM4tE7qATl8",
+  authDomain: "all-game-6c562.firebaseapp.com",
+  projectId: "all-game-6c562",
+  storageBucket: "all-game-6c562.firebasestorage.app",
+  messagingSenderId: "486227925026",
+  appId: "1:486227925026:web:201f63385c470cc24dd27b",
+  measurementId: "G-QMGXNJDBJZ"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
