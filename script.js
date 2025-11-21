@@ -1,4 +1,4 @@
-// ✅ 在檔案上方 Game class 前面加這個工具函數
+// ✅ 工具函數
 function hideDefInName(name) {
   return typeof name === 'string'
     ? name.replace(/def/gi, '')
@@ -11,25 +11,22 @@ class Game {
     this.ctx = null;
     this.player = null;
     this.otherPlayers = new Map();
-    this.playerName = '';     // 顯示給大家看的名稱（可含空白）
-    this.playerNetId = null;  // 伺服器分配的唯一 ID（finalId）
+    this.playerName = '';
+    this.playerNetId = null;
     this.projectiles = [];
     this.mapWidth = 2000;
     this.mapHeight = 2000;
-    this.killFeed = []; // 用來存擊殺訊息
+    this.killFeed = [];
     this.isRunning = false;
     this.isMobile = true;
     this.socket = null;
-    this.gridSize = 50; 
+    this.gridSize = 50;
     this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
-    this.joystick = {
-      active: false,
-      startX: 0,
-      startY: 0,
-      currentX: 0,
-      currentY: 0
+    this.joysticks = {
+      move: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 },
+      shoot: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }
     };
     this.init();
   }
@@ -38,9 +35,10 @@ class Game {
     this.setupCanvas();
     this.setupEventListeners();
     this.initSocket();
-    this.initTips(); 
+    this.initTips();
   }
-  initTips() {                      // ✅ 新增方法
+
+  initTips() {
     const tips = [
       "如果名字前後加四個空白會有驚喜！",
       "不如在名字前加個ex試試！",
@@ -66,13 +64,9 @@ class Game {
       this.socket = new WebSocket(wsUrl);
       this.socket.onopen = () => {
         console.log('已連接到伺服器');
-        // ✅ 旁觀者打招呼，索取一次玩家清單
         this.socket.send(JSON.stringify({ type: 'spectateHello' }));
       };
-      this.socket.onmessage = (event) => {
-        // console.log('[Client] 收到訊息：', event.data);
-        this.handleServerMessage(JSON.parse(event.data));
-      };
+      this.socket.onmessage = (event) => this.handleServerMessage(JSON.parse(event.data));
       this.socket.onclose = () => { console.log('與伺服器連接斷開'); this.socket = null; };
       this.socket.onerror = (error) => console.error('WebSocket 錯誤:', error);
     } catch (error) {
@@ -82,13 +76,8 @@ class Game {
 
   handleServerMessage(data) {
     switch (data.type) {
-      case 'joinAck':
-      // 記下伺服器分給我的唯一 ID
-        this.playerNetId = data.id;
-        break;
-
+      case 'joinAck': this.playerNetId = data.id; break;
       case 'currentPlayers':
-        // 建立其它玩家（用 displayName 當頭上名字）
         data.players.forEach(p => {
           if (p.id !== this.playerNetId) {
             this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName, p.hp ?? 10));
@@ -97,14 +86,12 @@ class Game {
         break;
       case 'playerJoined':
         if (data.player.id !== this.playerNetId) {
-          this.otherPlayers.set(
-            data.player.id,
-            new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName, data.player.hp ?? 10)
-          );
+          this.otherPlayers.set(data.player.id, new Player(
+            data.player.x, data.player.y, '#e67e22', data.player.displayName, data.player.hp ?? 10
+          ));
         }
         break;
       case 'playerUpdate':
-        // ✅ 這裡之前貼成伺服器碼了，改回客戶端更新
         if (data.player.id !== this.playerNetId && this.otherPlayers.has(data.player.id)) {
           const p = this.otherPlayers.get(data.player.id);
           p.x = data.player.x;
@@ -113,81 +100,39 @@ class Game {
           p.directionY = data.player.directionY;
         }
         break;
-      case 'playerLeft':
-        this.otherPlayers.delete(data.playerId);
-        break;
+      case 'playerLeft': this.otherPlayers.delete(data.playerId); break;
       case 'projectileCreated':
         this.projectiles.push(new Projectile(
-          data.projectile.x,
-          data.projectile.y,
-          data.projectile.directionX,
-          data.projectile.directionY,
-          data.projectile.playerId,
-          data.projectile.radius || 5,
-          data.projectile.speed || 10,
-          data.projectile.id
+          data.projectile.x, data.projectile.y,
+          data.projectile.directionX, data.projectile.directionY,
+          data.projectile.playerId, data.projectile.radius || 5,
+          data.projectile.speed || 10, data.projectile.id
         ));
         break;
       case 'systemMessage':
-        this.killFeed.push({
-          text: data.message,
-          time: Date.now()
-        });
+        this.killFeed.push({ text: data.message, time: Date.now() });
         break;
       case 'hpUpdate': {
         const id = data.playerId;
         const newHp = data.hp;
-        if (id === this.playerNetId && this.player) {
-          this.player.hp = newHp;
-        } else if (this.otherPlayers.has(id)) {
-          this.otherPlayers.get(id).hp = newHp;
-        }
+        if (id === this.playerNetId && this.player) this.player.hp = newHp;
+        else if (this.otherPlayers.has(id)) this.otherPlayers.get(id).hp = newHp;
         break;
       }
       case 'playerHit': {
         const victimId = data.playerId;
         const killerId = data.killerId;
-
-        // UI & 狀態
-        if (victimId === this.playerNetId) {
-          this.playerHit();
-        } else {
-          console.log('刪除玩家:', victimId);
-          this.otherPlayers.delete(victimId);
-          this.render();
-        }
-
-        // 計數：killer +1、victim 歸零
-        let killerCount = null;
-        if (killerId) {
-          killerCount = (this.killCounts.get(killerId) || 0) + 1;
-          this.killCounts.set(killerId, killerCount);
-        }
-        this.killCounts.set(victimId, 0);
-
-        // Kill feed：帶出累積 K
+        if (victimId === this.playerNetId) this.playerHit();
+        else this.otherPlayers.delete(victimId);
+        let killerCount = killerId ? (this.killCounts.get(killerId)||0)+1 : null;
+        if(killerId) this.killCounts.set(killerId,killerCount);
+        this.killCounts.set(victimId,0);
         const suffix = (killerId && killerCount !== null) ? ` | 連殺:${killerCount}` : '';
         const killerName = killerId ?? '未知';
-        this.killFeed.push({
-          text: `${killerName} 擊殺了 ${victimId}${suffix}`,
-          time: Date.now()
-        });
+        this.killFeed.push({ text: `${killerName} 擊殺了 ${victimId}${suffix}`, time: Date.now() });
         break;
       }
     }
-  }
-  
-  drawGridOnContext(ctx) {
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.06;
-    for (let x = 0; x <= this.mapWidth; x += this.gridSize) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.mapHeight); ctx.stroke();
-    }
-    for (let y = 0; y <= this.mapHeight; y += this.gridSize) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.mapWidth, y); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
   }
 
   setupCanvas() {
@@ -211,136 +156,104 @@ class Game {
       this.mousePos.x = e.clientX - rect.left;
       this.mousePos.y = e.clientY - rect.top;
     });
-    document.addEventListener('click', (e) => {
-      if (this.isRunning && !this.isMobile) this.shoot();
-    });
+    document.addEventListener('click', (e) => { if (this.isRunning && !this.isMobile) this.shoot(); });
     this.setupTouchControls();
   }
 
+  // ===================== 手機雙搖桿 =====================
   setupTouchControls() {
     const moveJoystick = document.getElementById('moveJoystick');
     const moveKnob = document.getElementById('moveKnob');
     const shootJoystick = document.getElementById('shootJoystick');
     const shootKnob = document.getElementById('shootKnob');
 
-    const joysticks = {
-      move: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 },
-      shoot: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }
-    };
-
-    let touchMap = {}; // 紀錄手指 id 對應哪個搖桿
+    let touchMap = {}; // 記錄 touchId -> 'move' 或 'shoot'
 
     document.addEventListener('touchstart', (e) => {
-      for (let touch of e.changedTouches) {
-         const x = touch.clientX;
-        const y = touch.clientY;
-        if (x < window.innerWidth / 2) {
-          // 左半螢幕 → 移動
-          joysticks.move.active = true;
-          joysticks.move.startX = joysticks.move.currentX = x;
-          joysticks.move.startY = joysticks.move.currentY = y;
-          moveJoystick.style.display = 'block';
-          moveJoystick.style.left = `${x - 60}px`;
-          moveJoystick.style.top = `${y - 60}px`;
-          touchMap[touch.identifier] = 'move';
+      for (let t of e.changedTouches) {
+        const x = t.clientX;
+        const y = t.clientY;
+        if (x < window.innerWidth/2) {
+          // 左半螢幕
+          this.joysticks.move.active = true;
+          this.joysticks.move.startX = this.joysticks.move.currentX = x;
+          this.joysticks.move.startY = this.joysticks.move.currentY = y;
+          moveJoystick.style.display='block';
+          moveJoystick.style.left=`${x-60}px`; moveJoystick.style.top=`${y-60}px`;
+          touchMap[t.identifier]='move';
         } else {
-          // 右半螢幕 → 射擊
-          joysticks.shoot.active = true;
-          joysticks.shoot.startX = joysticks.shoot.currentX = x;
-          joysticks.shoot.startY = joysticks.shoot.currentY = y;
-          shootJoystick.style.display = 'block';
-          shootJoystick.style.left = `${x - 60}px`;
-          shootJoystick.style.top = `${y - 60}px`;
-          touchMap[touch.identifier] = 'shoot';
+          // 右半螢幕
+          this.joysticks.shoot.active = true;
+          this.joysticks.shoot.startX = this.joysticks.shoot.currentX = x;
+          this.joysticks.shoot.startY = this.joysticks.shoot.currentY = y;
+          shootJoystick.style.display='block';
+          shootJoystick.style.left=`${x-60}px`; shootJoystick.style.top=`${y-60}px`;
+          touchMap[t.identifier]='shoot';
         }
       }
     });
 
     document.addEventListener('touchmove', (e) => {
-      for (let touch of e.touches) {
-        const type = touchMap[touch.identifier];
-        if (!type) continue;
-        joysticks[type].currentX = touch.clientX;
-        joysticks[type].currentY = touch.clientY;
-        this.updateJoystickKnob(type === 'move' ? moveKnob : shootKnob, joysticks[type]);
+      for (let t of e.touches) {
+        const type = touchMap[t.identifier];
+        if(!type) continue;
+        this.joysticks[type].currentX = t.clientX;
+        this.joysticks[type].currentY = t.clientY;
+        this.updateJoystickKnob(type==='move'?moveKnob:shootKnob,this.joysticks[type]);
         e.preventDefault();
       }
     });
 
     document.addEventListener('touchend', (e) => {
-      for (let touch of e.changedTouches) {
-        const type = touchMap[touch.identifier];
-        if (!type) continue;
-        joysticks[type].active = false;
-        delete touchMap[touch.identifier];
-        const knob = type === 'move' ? moveKnob : shootKnob;
-        const joystickEl = type === 'move' ? moveJoystick : shootJoystick;
-        knob.style.transform = 'translate(-50%, -50%)';
-        joystickEl.style.display = 'none';
-
-        // 射擊搖桿放開 → 發射一次子彈
-        if (type === 'shoot' && this.isRunning) this.shoot();
+      for (let t of e.changedTouches) {
+        const type = touchMap[t.identifier];
+        if(!type) continue;
+        this.joysticks[type].active=false;
+        delete touchMap[t.identifier];
+        const knob = type==='move'?moveKnob:shootKnob;
+        const joystickEl = type==='move'?moveJoystick:shootJoystick;
+        knob.style.transform='translate(-50%,-50%)';
+        joystickEl.style.display='none';
+        if(type==='shoot' && this.isRunning) this.shoot();
       }
     });
-
-    // 保存 joysticks 物件給 updatePlayer() 使用
-    this.joysticks = joysticks;
   }
 
-  // 更新搖桿旋鈕位置
   updateJoystickKnob(knob, joy) {
     const dx = joy.currentX - joy.startX;
     const dy = joy.currentY - joy.startY;
     const distance = Math.sqrt(dx*dx + dy*dy);
     const maxDistance = 40;
-    if (distance <= maxDistance) {
-      knob.style.transform = `translate(${dx-20}px, ${dy-20}px)`;
-    } else {
-      const angle = Math.atan2(dy, dx);
-      knob.style.transform = `translate(${Math.cos(angle)*maxDistance-20}px, ${Math.sin(angle)*maxDistance-20}px)`;
-    }
+    if(distance<=maxDistance) knob.style.transform=`translate(${dx-20}px, ${dy-20}px)`;
+    else { const angle=Math.atan2(dy,dx); knob.style.transform=`translate(${Math.cos(angle)*maxDistance-20}px, ${Math.sin(angle)*maxDistance-20}px)`; }
   }
 
-
+  // ===================== 遊戲邏輯 =====================
   startGame() {
-    
-    const input = document.getElementById('playerIdInput');
-    const rawId = input ? input.value : '';
-    this.playerName = rawId.trim() !== '' ? rawId : Math.random().toString(36).substr(2, 9);
+    const input=document.getElementById('playerIdInput');
+    const rawId = input?input.value:'';
+    this.playerName = rawId.trim()!==''?rawId:Math.random().toString(36).substr(2,9);
 
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
 
     this.player = new Player(
-      Math.random() * this.mapWidth / 2 + this.mapWidth / 4,
-      Math.random() * this.mapHeight / 2 + this.mapHeight / 4,
-      '#3498db',
-      this.playerName // 畫自己頭上的文字
+      Math.random()*this.mapWidth/2+this.mapWidth/4,
+      Math.random()*this.mapHeight/2+this.mapHeight/4,
+      '#3498db', this.playerName
     );
 
-    this.killCounts.clear();
-    this.projectiles = [];
-    this.otherPlayers.clear();
-    this.isRunning = true;
+    this.killCounts.clear(); this.projectiles=[]; this.otherPlayers.clear();
+    this.isRunning=true;
 
-    // 告知伺服器我來了（送 displayName）
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({
-        type: 'playerJoin',
-        displayName: this.playerName,
-        x: this.player.x,
-        y: this.player.y
-      }));
+    if(this.socket && this.socket.readyState===WebSocket.OPEN){
+      this.socket.send(JSON.stringify({type:'playerJoin',displayName:this.playerName,x:this.player.x,y:this.player.y}));
     }
 
-    this.gameLoop();}
-
-  gameLoop() {
-    if (!this.isRunning) return;
-    this.update();
-    this.render();
-    requestAnimationFrame(() => this.gameLoop());
+    this.gameLoop();
   }
+
+  gameLoop() { if(!this.isRunning) return; this.update(); this.render(); requestAnimationFrame(()=>this.gameLoop()); }
 
   update() {
     this.updatePlayer();
@@ -350,252 +263,129 @@ class Game {
   }
 
   updatePlayer() {
-    if (!this.player) return;
-    if (this.isMobile && this.joysticks) {
+    if(!this.player) return;
+    if(this.isMobile && this.joysticks) {
       // 左半螢幕 → 移動
-      const move = this.joysticks.move; 
-      if (move.active) {
+      const move = this.joysticks.move;
+      if(move.active){
         const dx = move.currentX - move.startX;
         const dy = move.currentY - move.startY;
-        const len = Math.hypot(dx, dy);
-        if (len > 0) {
-          const speed = Math.min(len * 0.1, 8);
-          this.player.move((dx/len)*speed, (dy/len)*speed);
+        const len = Math.hypot(dx,dy);
+        if(len>0){
+          const speed = Math.min(len*0.1,8);
+          this.player.move(dx/len*speed, dy/len*speed);
         }
       }
       // 右半螢幕 → 射擊方向
       const shoot = this.joysticks.shoot;
-      if (shoot.active) {
+      if(shoot.active){
         const dx = shoot.currentX - shoot.startX;
         const dy = shoot.currentY - shoot.startY;
-        this.player.setDirection(dx, dy);
+        this.player.setDirection(dx,dy);
       }
-    }else{
-      let mx = 0, my = 0;
-      if (this.keys['w'] || this.keys['arrowup']) my -= 1;
-      if (this.keys['s'] || this.keys['arrowdown']) my += 1;
-      if (this.keys['a'] || this.keys['arrowleft']) mx -= 1;
-      if (this.keys['d'] || this.keys['arrowright']) mx += 1;
-      this.player.move(mx * 5, my * 5);
+    } else {
+      // 桌機鍵盤/滑鼠保持原本
+      let mx=0,my=0;
+      if(this.keys['w']||this.keys['arrowup']) my-=1;
+      if(this.keys['s']||this.keys['arrowdown']) my+=1;
+      if(this.keys['a']||this.keys['arrowleft']) mx-=1;
+      if(this.keys['d']||this.keys['arrowright']) mx+=1;
+      this.player.move(mx*5,my*5);
       const dx = this.mousePos.x - this.player.x;
       const dy = this.mousePos.y - this.player.y;
-      this.player.setDirection(dx, dy);
+      this.player.setDirection(dx,dy);
     }
-    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.playerNetId) {
-      this.socket.send(JSON.stringify({
-        type: 'playerUpdate',
-        playerId: this.playerNetId,
-        x: this.player.x,
-        y: this.player.y,
-        directionX: this.player.directionX,
-        directionY: this.player.directionY
-      }));
+
+    if(this.socket && this.socket.readyState===WebSocket.OPEN && this.playerNetId){
+      this.socket.send(JSON.stringify({type:'playerUpdate',playerId:this.playerNetId,x:this.player.x,y:this.player.y,directionX:this.player.directionX,directionY:this.player.directionY}));
     }
   }
 
   updateOtherPlayers() {}
+  updateProjectiles() { for(let i=this.projectiles.length-1;i>=0;i--){ const p=this.projectiles[i]; p.update(); if(p.x<0||p.x>this.mapWidth||p.y<0||p.y>this.mapHeight) this.projectiles.splice(i,1); } }
 
-  updateProjectiles() {
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const proj = this.projectiles[i];
-      proj.update();
-      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight) {
-        this.projectiles.splice(i, 1);
-      }
-    }
-  }
-
-  checkCollisions() {
-    for (let proj of this.projectiles) {
-      if (proj.playerId !== this.playerNetId) {  
-        const dist = Math.hypot(proj.x - this.player.x, proj.y - this.player.y);
-        if (dist < this.player.radius + proj.radius) {
-          // 回報命中給伺服器，交由伺服器扣血／判死亡
-          if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify({
-              type: 'playerDamaged',
-              victimId: this.playerNetId,
-              shooterId: proj.playerId,
-              projectileId: proj.id
-            }));
+  checkCollisions() { 
+    for(let proj of this.projectiles){
+      if(proj.playerId!==this.playerNetId){
+        const dist=Math.hypot(proj.x-this.player.x,proj.y-this.player.y);
+        if(dist<this.player.radius+proj.radius){
+          if(this.socket && this.socket.readyState===WebSocket.OPEN){
+            this.socket.send(JSON.stringify({type:'playerDamaged',victimId:this.playerNetId,shooterId:proj.playerId,projectileId:proj.id}));
           }
-          // 客戶端先把這顆子彈移除，避免多次觸發（伺服器也會廣播正式移除）  
-          this.projectiles = this.projectiles.filter(p => p.id !== proj.id);
-          return; // 一次處理一顆就好
+          this.projectiles = this.projectiles.filter(p=>p.id!==proj.id);
+          return;
         }
       }
     }
   }
 
   playerHit() {
-    if (this.playerNetId) this.killCounts.set(this.playerNetId, 0);
-    this.isRunning = false;
+    if(this.playerNetId) this.killCounts.set(this.playerNetId,0);
+    this.isRunning=false;
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
     this.otherPlayers.clear();
-    this.projectiles = [];
-    this.player = null;
+    this.projectiles=[];
+    this.player=null;
   }
 
   shoot() {
     let bulletRadius = 5;
-    if (this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) {
-      bulletRadius = 10; // ✅ 加大子彈
-    }
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({
-        type: 'shoot',
-        x: this.player.x,
-        y: this.player.y,
-        directionX: this.player.directionX,
-        directionY: this.player.directionY,
-        playerId: this.playerNetId,
-        radius: bulletRadius
-      }));
+    if(this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) bulletRadius=10;
+    if(this.socket && this.socket.readyState===WebSocket.OPEN){
+      this.socket.send(JSON.stringify({type:'shoot',x:this.player.x,y:this.player.y,directionX:this.player.directionX,directionY:this.player.directionY,playerId:this.playerNetId,radius:bulletRadius}));
     }
   }
 
-  drawGrid() {
-    this.drawGridOnContext(this.ctx);
-    this.ctx.strokeStyle = '#ffffff';
-    this.ctx.lineWidth = 1;
-    this.ctx.globalAlpha = 0.06;
-    for (let x = 0; x <= this.mapWidth; x += this.gridSize) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.mapHeight);
-      this.ctx.stroke();
-    }
-    for (let y = 0; y <= this.mapHeight; y += this.gridSize) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.mapWidth, y);
-      this.ctx.stroke();
-    }
-    this.ctx.globalAlpha = 1;
+  drawGridOnContext(ctx) {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=1; ctx.globalAlpha=0.06;
+    for(let x=0;x<=this.mapWidth;x+=this.gridSize){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,this.mapHeight);ctx.stroke();}
+    for(let y=0;y<=this.mapHeight;y+=this.gridSize){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(this.mapWidth,y);ctx.stroke();}
+    ctx.globalAlpha=1;
   }
+
+  drawGrid() { this.drawGridOnContext(this.ctx); }
 
   render() {
-    const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
-    const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
-    // 畫「外框」→ 畫整個畫布（畫面背景）
-    this.ctx.fillStyle = '#34495e'; // 外框色（畫布整體）
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.save();
-    this.ctx.translate(-camX, -camY);
-    // 畫「地圖」→ 地圖範圍內（置中玩家）
-    this.ctx.fillStyle = '#2c3e50'; // 地圖內部顏色
-    this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
+    const camX = this.player ? this.player.x - this.canvas.width/2 : 0;
+    const camY = this.player ? this.player.y - this.canvas.height/2 : 0;
+    this.ctx.fillStyle='#34495e'; this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+    this.ctx.save(); this.ctx.translate(-camX,-camY);
+    this.ctx.fillStyle='#2c3e50'; this.ctx.fillRect(0,0,this.mapWidth,this.mapHeight);
     this.drawGrid();
-    if (this.player) this.player.render(this.ctx);
-    for (let [id, player] of this.otherPlayers.entries()) {
-      if (player) player.render(this.ctx);
-    }
-    this.projectiles.forEach(p => p.render(this.ctx));
+    if(this.player) this.player.render(this.ctx);
+    for(let [id,player] of this.otherPlayers.entries()) player.render(this.ctx);
+    this.projectiles.forEach(p=>p.render(this.ctx));
     this.ctx.restore();
-    // 畫擊殺訊息
-    this.ctx.fillStyle = 'white';
-    this.ctx.font = '16px Arial';
-    this.ctx.textAlign = 'left';
-    let now = Date.now();
-    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); // 只留5秒
-    this.killFeed.forEach((msg, index) => {
-      this.ctx.fillText(msg.text, 20, 30 + index * 20);
-    });
+
+    this.ctx.fillStyle='white'; this.ctx.font='16px Arial'; this.ctx.textAlign='left';
+    const now=Date.now();
+    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000);
+    this.killFeed.forEach((msg,index)=>{ this.ctx.fillText(msg.text,20,30+index*20); });
   }
 }
 
-class Player {
-  constructor(x, y, color = '#3498db',id='',hp = 10) {
-    this.x = x;
-    this.y = y;
-    this.radius = 20;
-    this.color = color;
-    this.directionX = 0;
-    this.directionY = 0;
-    this.id = id;
-    this.hp = hp;
-  }
-
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
-    const game = window.game;
-    if (game) {
-      this.x = Math.max(this.radius, Math.min(game.mapWidth - this.radius, this.x));
-      this.y = Math.max(this.radius, Math.min(game.mapHeight - this.radius, this.y));
-    }
-  }
-
-  setDirection(dx, dy) {
-    const len = Math.sqrt(dx * dx + dy * dy);
-    if (len > 0) {
-      this.directionX = dx / len;
-      this.directionY = dy / len;
-    }
-  }
-
-  render(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(
-      this.x + this.directionX * this.radius * 1.5,
-      this.y + this.directionY * this.radius * 1.5
-    );
-    ctx.stroke();
-    if (this.id) {
-      ctx.fillStyle = 'white';
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(hideDefInName(this.id), this.x, this.y - this.radius - 10);
-    }
-    // 血條（可選）
-    const barW = 40, barH = 6;
-    const hpPct = Math.max(0, Math.min(1, (this.hp ?? 10) / 10));
-    const barY = this.y - this.radius - 7;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(this.x - barW/2, barY, barW, barH);
-    ctx.fillStyle = '#27ae60';
-    ctx.fillRect(this.x - barW/2, barY, barW * hpPct, barH);
+// ===================== Player & Projectile =====================
+class Player{
+  constructor(x,y,color='#3498db',id='',hp=10){this.x=x;this.y=y;this.radius=20;this.color=color;this.directionX=0;this.directionY=0;this.id=id;this.hp=hp;}
+  move(dx,dy){this.x+=dx;this.y+=dy;const g=window.game;if(g){this.x=Math.max(this.radius,Math.min(g.mapWidth-this.radius,this.x));this.y=Math.max(this.radius,Math.min(g.mapHeight-this.radius,this.y));}}
+  setDirection(dx,dy){const len=Math.hypot(dx,dy);if(len>0){this.directionX=dx/len;this.directionY=dy/len;}}
+  render(ctx){
+    ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#2c3e50'; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(this.x,this.y); ctx.lineTo(this.x+this.directionX*this.radius*1.5,this.y+this.directionY*this.radius*1.5); ctx.stroke();
+    if(this.id){ ctx.fillStyle='white'; ctx.font='14px Arial'; ctx.textAlign='center'; ctx.fillText(hideDefInName(this.id),this.x,this.y-this.radius-10);}
+    const barW=40,barH=6,barY=this.y-this.radius-7; const hpPct=Math.max(0,Math.min(1,(this.hp??10)/10));
+    ctx.fillStyle='#000'; ctx.fillRect(this.x-barW/2,barY,barW,barH);
+    ctx.fillStyle='red'; ctx.fillRect(this.x-barW/2,barY,barW*hpPct,barH);
   }
 }
 
-class Projectile {
-  constructor(x, y, directionX, directionY, playerId,radius = 5, speed = 10, id = null) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.speed = speed;
-    this.directionX = directionX;
-    this.directionY = directionY;
-    this.color = '#e74c3c';
-    this.playerId = playerId;
-    this.id = id;
-  }
-
-  update() {
-    this.x += this.directionX * this.speed;
-    this.y += this.directionY * this.speed;
-  }
-
-  render(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#c0392b';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
+class Projectile{
+  constructor(x,y,dx,dy,playerId,radius=5,speed=10,id){this.x=x;this.y=y;this.directionX=dx;this.directionY=dy;this.radius=radius;this.speed=speed;this.playerId=playerId;this.id=id;}
+  update(){this.x+=this.directionX*this.speed;this.y+=this.directionY*this.speed;}
+  render(ctx){ctx.fillStyle='yellow';ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();}
 }
 
+// ===================== 啟動遊戲 =====================
 window.game = new Game();
