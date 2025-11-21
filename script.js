@@ -600,4 +600,3 @@ class Projectile {
 }
 
 window.game = new Game();
-幫我將聊天室整合進去
