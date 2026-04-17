@@ -347,9 +347,19 @@ class Game {
       if (this.keys['s'] || this.keys['arrowdown']) my += 1;
       if (this.keys['a'] || this.keys['arrowleft']) mx -= 1;
       if (this.keys['d'] || this.keys['arrowright']) mx += 1;
+
+      //🔥 新增：對角線移動正規化，防止斜向移動速度過快
+      if (mx !== 0 && my !== 0) {
+        const len = Math.sqrt(mx * mx + my * my);
+        mx /= len;
+        my /= len;
+      }
+
       this.player.move(mx * 5, my * 5);
-      const dx = this.mousePos.x - this.player.x;
-      const dy = this.mousePos.y - this.player.y;
+      
+      //🔥 修改：修復滑鼠瞄準偏移。因為畫面會跟著玩家移動(玩家永遠在螢幕正中央)，滑鼠(螢幕座標)應直接與螢幕中心做計算
+      const dx = this.mousePos.x - (this.canvas.width / 2);
+      const dy = this.mousePos.y - (this.canvas.height / 2);
       this.player.setDirection(dx, dy);
     }
     if (this.socket && this.socket.readyState === WebSocket.OPEN && this.playerNetId) {
