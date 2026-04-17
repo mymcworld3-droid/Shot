@@ -129,6 +129,10 @@ class Game {
           data.projectile.id
         ));
         break;
+      //🔥 新增：監聽伺服器廣播的子彈銷毀，避免別人的子彈打中人後還留在畫面上
+      case 'projectileDestroyed':
+        this.projectiles = this.projectiles.filter(p => p.id !== data.projectileId);
+        break;
       case 'systemMessage':
         this.killFeed.push({
           text: data.message,
