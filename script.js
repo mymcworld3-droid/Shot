@@ -329,20 +329,20 @@ class Game {
 
   updatePlayer() {
     if (!this.player) return;
-    if (this.isMobile) {
-      if (this.joystick.active){
-        const dx = this.joystick.currentX - this.joystick.startX;
-        const dy = this.joystick.currentY - this.joystick.startY;
-        const len = Math.sqrt(dx * dx + dy * dy);
-        if (len > 0) {
-          const maxSpeed = 8;
-          const normX = dx / len; 
-          const normY = dy / len;
-          const speed = Math.min(len * 0.1, maxSpeed);
-          this.player.move(normX * speed, normY * speed);
-          this.player.setDirection(dx, dy);
-        } 
-      }
+    
+    //🔥 修改：完美整合搖桿與鍵盤判斷。不再被 isMobile 綁死，解決平板或觸控筆電誤判導致完全動不了的問題
+    if (this.joystick.active) {
+      const dx = this.joystick.currentX - this.joystick.startX;
+      const dy = this.joystick.currentY - this.joystick.startY;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        const maxSpeed = 8;
+        const normX = dx / len; 
+        const normY = dy / len;
+        const speed = Math.min(len * 0.1, maxSpeed);
+        this.player.move(normX * speed, normY * speed);
+        this.player.setDirection(dx, dy);
+      } 
     } else {
       let mx = 0, my = 0;
       if (this.keys['w'] || this.keys['arrowup']) my -= 1;
@@ -359,11 +359,12 @@ class Game {
 
       this.player.move(mx * 5, my * 5);
       
-      //🔥 修改：修復滑鼠瞄準偏移。因為畫面會跟著玩家移動(玩家永遠在螢幕正中央)，滑鼠(螢幕座標)應直接與螢幕中心做計算
+      //🔥 修改：修復滑鼠瞄準偏移。因為畫面會跟著玩家移動，滑鼠(螢幕座標)應直接與螢幕中心做計算
       const dx = this.mousePos.x - (this.canvas.width / 2);
       const dy = this.mousePos.y - (this.canvas.height / 2);
       this.player.setDirection(dx, dy);
     }
+    
     if (this.socket && this.socket.readyState === WebSocket.OPEN && this.playerNetId) {
       this.socket.send(JSON.stringify({
         type: 'playerUpdate',
