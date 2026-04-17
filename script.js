@@ -209,15 +209,17 @@ class Game {
 
   setupEventListeners() {
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
-    document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
-    document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);
+    //🔥 修改：增加 e.key 的防呆，避免中文輸入法導致的 undefined 錯誤
+    document.addEventListener('keydown', (e) => { if (e.key) this.keys[e.key.toLowerCase()] = true; });
+    document.addEventListener('keyup', (e) => { if (e.key) this.keys[e.key.toLowerCase()] = false; });
     document.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       this.mousePos.x = e.clientX - rect.left;
       this.mousePos.y = e.clientY - rect.top;
     });
     document.addEventListener('click', (e) => {
-      if (this.isRunning && !this.isMobile) this.shoot();
+      //🔥 修改：不再限制 isMobile，只要沒有在滑動搖桿，任何裝置點擊都可以射擊
+      if (this.isRunning && !this.joystick.active) this.shoot();
     });
     this.setupTouchControls();
   }
