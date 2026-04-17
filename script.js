@@ -18,7 +18,8 @@ class Game {
     this.mapHeight = 2000;
     this.killFeed = []; // 用來存擊殺訊息
     this.isRunning = false;
-    this.isMobile = true;
+    //🔥 修改：原本寫死為 true，導致電腦版玩家無法移動和射擊。改為動態偵測是否為行動裝置
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.socket = null;
     this.gridSize = 50; 
     this.killCounts = new Map();
