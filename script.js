@@ -457,6 +457,11 @@ class Game {
   }
 
   shoot() {
+    //🔥 新增：防抖機制，防止手機端同時觸發 touch 和 click 導致一次射出兩顆子彈
+    const now = Date.now();
+    if (now - (this.lastShootTime || 0) < 100) return; // 100毫秒內只能射擊一次
+    this.lastShootTime = now;
+
     let bulletRadius = 5;
     if (this.playerName.startsWith("    ") && this.playerName.endsWith("    ")) {
       bulletRadius = 10; // ✅ 加大子彈
