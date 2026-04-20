@@ -89,10 +89,10 @@ class Game {
         break;
 
       case 'currentPlayers':
+        // 建立其它玩家（用 displayName 當頭上名字）
         data.players.forEach(p => {
           if (p.id !== this.playerNetId) {
-            //🔥 修改：把原本寫死的 '#e67e22' 換成 p.color
-            this.otherPlayers.set(p.id, new Player(p.x, p.y, p.color || '#e67e22', p.displayName, p.hp ?? 10));
+            this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName, p.hp ?? 10));
           }
         });
         break;
@@ -100,8 +100,7 @@ class Game {
         if (data.player.id !== this.playerNetId) {
           this.otherPlayers.set(
             data.player.id,
-            //🔥 修改：接收新玩家的顏色 data.player.color
-            new Player(data.player.x, data.player.y, data.player.color || '#e67e22', data.player.displayName, data.player.hp ?? 10)
+            new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName, data.player.hp ?? 10)
           );
         }
         break;
