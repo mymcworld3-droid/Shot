@@ -111,6 +111,7 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message);
 
       switch (data.type) {
+        switch (data.type) {
         case 'spectateHello':
           ws.send(JSON.stringify({
             type: 'currentPlayers',
@@ -119,7 +120,8 @@ wss.on('connection', (ws) => {
               displayName: displayToClients(p.displayName),
               x: p.x, y: p.y,
               directionX: p.directionX, directionY: p.directionY,
-              hp: p.hp
+              hp: p.hp,
+              color: p.color //🔥 新增
             }))
           }));
           break;
@@ -141,6 +143,7 @@ wss.on('connection', (ws) => {
             y: data.y,
             directionX: 0,
             directionY: 0,
+            color: data.color || '#e67e22', //🔥 新增：儲存該玩家的顏色
             ws,
             hp: 10,
             lastHitAt: Date.now(),
@@ -157,7 +160,8 @@ wss.on('connection', (ws) => {
               y: p.y,
               directionX: p.directionX,
               directionY: p.directionY,
-              hp: p.hp             
+              hp: p.hp,
+              color: p.color //🔥 新增
             }))
           }));
 
@@ -170,7 +174,8 @@ wss.on('connection', (ws) => {
               y: data.y,
               directionX: 0,
               directionY: 0,
-              hp: 10
+              hp: 10,
+              color: data.color || '#e67e22' //🔥 新增：廣播給其他玩家
             }
           }, finalId);
           break;
