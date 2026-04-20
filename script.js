@@ -209,7 +209,6 @@ class Game {
   }
 
   setupEventListeners() {
-    setupEventListeners() {
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
     
     //🔥 新增：點擊顏色圓圈時的切換邏輯
