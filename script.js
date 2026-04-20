@@ -291,7 +291,6 @@ class Game {
   }
 
   startGame() {
-    
     const input = document.getElementById('playerIdInput');
     const rawId = input ? input.value : '';
     this.playerName = rawId.trim() !== '' ? rawId : Math.random().toString(36).substr(2, 9);
@@ -302,8 +301,8 @@ class Game {
     this.player = new Player(
       Math.random() * this.mapWidth / 2 + this.mapWidth / 4,
       Math.random() * this.mapHeight / 2 + this.mapHeight / 4,
-      '#3498db',
-      this.playerName // 畫自己頭上的文字
+      this.selectedColor, //🔥 修改：套用玩家選取的顏色
+      this.playerName
     );
 
     this.killCounts.clear();
@@ -311,17 +310,18 @@ class Game {
     this.otherPlayers.clear();
     this.isRunning = true;
 
-    // 告知伺服器我來了（送 displayName）
+    // 告知伺服器我來了
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
         displayName: this.playerName,
         x: this.player.x,
-        y: this.player.y
+        y: this.player.y,
+        color: this.selectedColor //🔥 新增：把選好的顏色傳給伺服器
       }));
     }
-
-    this.gameLoop();}
+    this.gameLoop();
+  }
 
   gameLoop() {
     if (!this.isRunning) return;
