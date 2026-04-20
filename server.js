@@ -352,7 +352,17 @@ setInterval(() => {
     proj.x += proj.directionX * proj.speed;
     proj.y += proj.directionY * proj.speed;
 
-    if (proj.x < 0 || proj.x > 2000 || proj.y < 0 || proj.y > 2000) {
+    //🔥 新增：檢查子彈是否撞到牆壁
+    let hitWall = false;
+    for (const w of walls) {
+      if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
+        hitWall = true;
+        break;
+      }
+    }
+
+    //🔥 修改：把原本寫死的 2000 替換成 MAP_WIDTH 和 MAP_HEIGHT，並加上 hitWall 判斷
+    if (proj.x < 0 || proj.x > MAP_WIDTH || proj.y < 0 || proj.y > MAP_HEIGHT || hitWall) {
       projectiles.splice(i, 1);
       broadcast({
         type: 'projectileDestroyed',
