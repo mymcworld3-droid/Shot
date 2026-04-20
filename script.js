@@ -209,8 +209,18 @@ class Game {
   }
 
   setupEventListeners() {
+    setupEventListeners() {
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
-    //🔥 修改：增加 e.key 的防呆，避免中文輸入法導致的 undefined 錯誤
+    
+    //🔥 新增：點擊顏色圓圈時的切換邏輯
+    document.querySelectorAll('.color-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        e.target.classList.add('selected');
+        this.selectedColor = e.target.getAttribute('data-color');
+      });
+    });
+
     document.addEventListener('keydown', (e) => { if (e.key) this.keys[e.key.toLowerCase()] = true; });
     document.addEventListener('keyup', (e) => { if (e.key) this.keys[e.key.toLowerCase()] = false; });
     document.addEventListener('mousemove', (e) => {
