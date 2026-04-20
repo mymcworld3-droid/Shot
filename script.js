@@ -82,18 +82,11 @@ class Game {
     }
   }
 
-  handleServerMessage(data) {
-    switch (data.type) {
-      case 'joinAck':
-      // 記下伺服器分給我的唯一 ID
-        this.playerNetId = data.id;
-        break;
-
-      case 'currentPlayers':
-        // 建立其它玩家（用 displayName 當頭上名字）
+  case 'currentPlayers':
         data.players.forEach(p => {
           if (p.id !== this.playerNetId) {
-            this.otherPlayers.set(p.id, new Player(p.x, p.y, '#e67e22', p.displayName, p.hp ?? 10));
+            //🔥 修改：把原本寫死的 '#e67e22' 換成 p.color
+            this.otherPlayers.set(p.id, new Player(p.x, p.y, p.color || '#e67e22', p.displayName, p.hp ?? 10));
           }
         });
         break;
@@ -101,87 +94,11 @@ class Game {
         if (data.player.id !== this.playerNetId) {
           this.otherPlayers.set(
             data.player.id,
-            new Player(data.player.x, data.player.y, '#e67e22', data.player.displayName, data.player.hp ?? 10)
+            //🔥 修改：接收新玩家的顏色 data.player.color
+            new Player(data.player.x, data.player.y, data.player.color || '#e67e22', data.player.displayName, data.player.hp ?? 10)
           );
         }
         break;
-      case 'playerUpdate':
-        // ✅ 這裡之前貼成伺服器碼了，改回客戶端更新
-        if (data.player.id !== this.playerNetId && this.otherPlayers.has(data.player.id)) {
-          const p = this.otherPlayers.get(data.player.id);
-          p.x = data.player.x;
-          p.y = data.player.y;
-          p.directionX = data.player.directionX;
-          p.directionY = data.player.directionY;
-        }
-        break;
-      case 'playerLeft':
-        this.otherPlayers.delete(data.playerId);
-        break;
-      case 'projectileCreated':
-        this.projectiles.push(new Projectile(
-          data.projectile.x,
-          data.projectile.y,
-          data.projectile.directionX,
-          data.projectile.directionY,
-          data.projectile.playerId,
-          data.projectile.radius || 5,
-          data.projectile.speed || 10,
-          data.projectile.id
-        ));
-        break;
-      //🔥 新增：監聽伺服器廣播的子彈銷毀，避免別人的子彈打中人後還留在畫面上
-      case 'projectileDestroyed':
-        this.projectiles = this.projectiles.filter(p => p.id !== data.projectileId);
-        break;
-      case 'systemMessage':
-        this.killFeed.push({
-          text: data.message,
-          time: Date.now()
-        });
-        break;
-      case 'hpUpdate': {
-        const id = data.playerId;
-        const newHp = data.hp;
-        if (id === this.playerNetId && this.player) {
-          this.player.hp = newHp;
-        } else if (this.otherPlayers.has(id)) {
-          this.otherPlayers.get(id).hp = newHp;
-        }
-        break;
-      }
-      case 'playerHit': {
-        const victimId = data.playerId;
-        const killerId = data.killerId;
-
-        // UI & 狀態
-        if (victimId === this.playerNetId) {
-          this.playerHit();
-        } else {
-          console.log('刪除玩家:', victimId);
-          this.otherPlayers.delete(victimId);
-          this.render();
-        }
-
-        // 計數：killer +1、victim 歸零
-        let killerCount = null;
-        if (killerId) {
-          killerCount = (this.killCounts.get(killerId) || 0) + 1;
-          this.killCounts.set(killerId, killerCount);
-        }
-        this.killCounts.set(victimId, 0);
-
-        // Kill feed：帶出累積 K
-        const suffix = (killerId && killerCount !== null) ? ` | 連殺:${killerCount}` : '';
-        const killerName = killerId ?? '未知';
-        this.killFeed.push({
-          text: `${killerName} 擊殺了 ${victimId}${suffix}`,
-          time: Date.now()
-        });
-        break;
-      }
-    }
-  }
   
   drawGridOnContext(ctx) {
     ctx.strokeStyle = '#ffffff';
