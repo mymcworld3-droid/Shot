@@ -11,34 +11,20 @@ class Game {
     this.ctx = null;
     this.player = null;
     this.otherPlayers = new Map();
-    this.playerName = '';     
-    this.playerNetId = null;  
+    this.playerName = '';     // 顯示給大家看的名稱（可含空白）
+    this.playerNetId = null;  // 伺服器分配的唯一 ID（finalId）
     this.projectiles = [];
-    
-    //🔥 修改：縮小地圖尺寸
-    this.mapWidth = 1200;
-    this.mapHeight = 1200;
-    
-    //🔥 新增：加入與伺服器相同的牆壁資料
-    this.walls = [
-      { x: 150, y: 150, w: 200, h: 50 },
-      { x: 850, y: 150, w: 200, h: 50 },
-      { x: 150, y: 1000, w: 200, h: 50 },
-      { x: 850, y: 1000, w: 200, h: 50 },
-      { x: 550, y: 400, w: 100, h: 400 },
-      { x: 250, y: 500, w: 50,  h: 200 },
-      { x: 900, y: 500, w: 50,  h: 200 }
-    ];
-
-    this.killFeed = []; 
+    this.mapWidth = 2000;
+    this.mapHeight = 2000;
+    this.killFeed = []; // 用來存擊殺訊息
     this.isRunning = false;
+    //🔥 修改：原本寫死為 true，導致電腦版玩家無法移動和射擊。改為動態偵測是否為行動裝置
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.socket = null;
     this.gridSize = 50; 
     this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
-    this.selectedColor = '#3498db'; 
     this.joystick = {
       active: false,
       startX: 0,
