@@ -29,35 +29,91 @@ html, body {
 }
 
 /* 主頁面樣式 */
+/* 主頁面樣式 */
 #mainMenu {
   position: relative;  /* ✅ 確保可以蓋在預覽上面 */
   z-index: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 🔥 修改：加入動態漸層背景，取代原本單調的靜態背景 */
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
   color: white;
-  backdrop-filter: blur(2px);
 }
-#gameScreen {
-  z-index: 2;                      /* 進入遊戲後，遊戲畫面最高層 */
+
+/* 🔥 新增：動態背景的動畫關鍵影格 */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
+
+/* 🔥 新增：登入卡片樣式 (毛玻璃風格) */
+.menu-container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 50px 60px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px; /* 統一控制內部元素的垂直間距 */
+}
+
 #mainMenu h1 {
-  font-size: 3rem;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  font-size: 3.5rem;
+  margin-bottom: 0; /* 原本有 margin，現在由 gap 控制 */
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+  letter-spacing: 2px;
+}
+
+/* 🔥 新增：美化原本預設的輸入框 */
+#playerIdInput {
+  padding: 12px 20px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 25px;
+  outline: none;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+/* 🔥 新增：輸入框點擊時的發光放大效果 */
+#playerIdInput:focus {
+  background: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6), inset 0 2px 4px rgba(0,0,0,0.1);
+  transform: scale(1.05);
 }
 
 .start-button {
-  padding: 15px 30px;
+  padding: 15px 40px;
   font-size: 1.5rem;
+  font-weight: bold;
   background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 30px; /* 🔥 修改：改成圓角按鈕 */
   cursor: pointer;
-  transition: background 0.3s;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  transition: all 0.3s ease; /* 🔥 新增：平滑動畫過渡 */
 }
 
+/* 🔥 修改：讓按鈕滑過時有懸浮放大與陰影加深的效果 */
 .start-button:hover {
   background: #45a049;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+/* 🔥 新增：點擊按鈕時的下壓真實感 */
+.start-button:active {
+  transform: translateY(1px);
 }
 
 /* 遊戲畫面樣式 */
