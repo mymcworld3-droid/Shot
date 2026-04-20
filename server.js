@@ -348,20 +348,38 @@ function broadcast(message, excludePlayerId = null) {
 setInterval(() => {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const proj = projectiles[i];
-    proj.x += proj.directionX * proj.speed;
-    proj.y += proj.directionY * proj.speed;
+    proj.bounces = proj.bounces || 0;
 
-    //🔥 新增：檢查子彈是否撞到牆壁
-    let hitWall = false;
+    //🔥 新增：伺服器端的 X 軸移動與反彈
+    proj.x += proj.directionX * proj.speed;
+    let hitX = false;
     for (const w of walls) {
       if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
-        hitWall = true;
-        break;
+        hitX = true; break;
       }
     }
+    if (hitX) {
+      proj.directionX *= -1;
+      proj.x += proj.directionX * proj.speed * 2;
+      proj.bounces++;
+    }
 
-    //🔥 修改：把原本寫死的 2000 替換成 MAP_WIDTH 和 MAP_HEIGHT，並加上 hitWall 判斷
-    if (proj.x < 0 || proj.x > MAP_WIDTH || proj.y < 0 || proj.y > MAP_HEIGHT || hitWall) {
+    //🔥 新增：伺服器端的 Y 軸移動與反彈
+    proj.y += proj.directionY * proj.speed;
+    let hitY = false;
+    for (const w of walls) {
+      if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
+        hitY = true; break;
+      }
+    }
+    if (hitY) {
+      proj.directionY *= -1;
+      proj.y += proj.directionY * proj.speed * 2;
+      proj.bounces++;
+    }
+
+    //🔥 修改：反彈超過 2 次才銷毀
+    if (proj.x < 0 || proj.x > MAP_WIDTH || proj.y < 0 || proj.y > MAP_HEIGHT || proj.bounces > 2) {
       projectiles.splice(i, 1);
       broadcast({
         type: 'projectileDestroyed',
