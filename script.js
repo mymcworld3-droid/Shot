@@ -407,7 +407,18 @@ class Game {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
       proj.update();
-      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight) {
+      
+      //🔥 新增：檢查子彈是否撞到牆壁
+      let hitWall = false;
+      for (let w of this.walls) {
+        if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
+          hitWall = true;
+          break;
+        }
+      }
+      
+      //🔥 修改：加上 hitWall 判斷
+      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight || hitWall) {
         this.projectiles.splice(i, 1);
       }
     }
