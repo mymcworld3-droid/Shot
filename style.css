@@ -91,6 +91,33 @@ html, body {
   transform: scale(1.05);
 }
 
+/* 🔥 新增：顏色選擇器樣式 */
+.color-picker {
+  display: flex;
+  gap: 15px;
+  margin: 10px 0;
+}
+
+.color-option {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: white;
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
 .start-button {
   padding: 15px 40px;
   font-size: 1.5rem;
