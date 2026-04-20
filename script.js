@@ -406,19 +406,40 @@ class Game {
   updateProjectiles() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
-      proj.update();
       
-      //🔥 新增：檢查子彈是否撞到牆壁
-      let hitWall = false;
+      //🔥 修改：將原本單純的更新改為精細的 X/Y 軸獨立碰撞與反彈計算
+      proj.bounces = proj.bounces || 0;
+
+      // X 軸移動與反彈
+      proj.x += proj.directionX * proj.speed;
+      let hitX = false;
       for (let w of this.walls) {
         if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
-          hitWall = true;
-          break;
+          hitX = true; break;
         }
       }
-      
-      //🔥 修改：加上 hitWall 判斷
-      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight || hitWall) {
+      if (hitX) {
+        proj.directionX *= -1; // 反轉 X 方向
+        proj.x += proj.directionX * proj.speed * 2; // 把子彈推離牆壁避免卡死
+        proj.bounces++;
+      }
+
+      // Y 軸移動與反彈
+      proj.y += proj.directionY * proj.speed;
+      let hitY = false;
+      for (let w of this.walls) {
+        if (proj.x > w.x && proj.x < w.x + w.w && proj.y > w.y && proj.y < w.y + w.h) {
+          hitY = true; break;
+        }
+      }
+      if (hitY) {
+        proj.directionY *= -1; // 反轉 Y 方向
+        proj.y += proj.directionY * proj.speed * 2;
+        proj.bounces++;
+      }
+
+      //🔥 修改：最多允許反彈 2 次，超過 2 次或飛出地圖就刪除
+      if (proj.x < 0 || proj.x > this.mapWidth || proj.y < 0 || proj.y > this.mapHeight || proj.bounces > 2) {
         this.projectiles.splice(i, 1);
       }
     }
