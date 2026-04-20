@@ -52,6 +52,19 @@ const wss = new WebSocket.Server({ server });
 const players = new Map();
 const projectiles = [];
 
+//🔥 新增：定義縮小的地圖尺寸與牆壁位置 (必須與用戶端一致)
+const MAP_WIDTH = 1200;
+const MAP_HEIGHT = 1200;
+const walls = [
+  { x: 150, y: 150, w: 200, h: 50 },
+  { x: 850, y: 150, w: 200, h: 50 },
+  { x: 150, y: 1000, w: 200, h: 50 },
+  { x: 850, y: 1000, w: 200, h: 50 },
+  { x: 550, y: 400, w: 100, h: 400 }, // 中央長方塊
+  { x: 250, y: 500, w: 50,  h: 200 },
+  { x: 900, y: 500, w: 50,  h: 200 }
+];
+
 function computeBulletRadiusById(netId) {
   const p = players.get(netId);
   const name = p?.displayName || '';
