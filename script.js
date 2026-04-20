@@ -25,6 +25,7 @@ class Game {
     this.killCounts = new Map();
     this.keys = {};
     this.mousePos = { x: 0, y: 0 };
+    this.selectedColor = '#3498db'; //🔥 新增：預設顏色
     this.joystick = {
       active: false,
       startX: 0,
