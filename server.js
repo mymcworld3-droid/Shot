@@ -124,7 +124,6 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message);
 
       switch (data.type) {
-        switch (data.type) {
         case 'spectateHello':
           ws.send(JSON.stringify({
             type: 'currentPlayers',
