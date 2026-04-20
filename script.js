@@ -506,6 +506,16 @@ class Game {
     this.ctx.fillStyle = '#2c3e50'; // 地圖內部顏色
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
+
+    //🔥 新增：畫出牆壁
+    this.ctx.fillStyle = '#7f8c8d'; // 牆壁填充顏色
+    for (let w of this.walls) {
+      this.ctx.fillRect(w.x, w.y, w.w, w.h);
+      this.ctx.strokeStyle = '#1a252f'; // 牆壁邊框顏色
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeRect(w.x, w.y, w.w, w.h);
+    }
+
     if (this.player) this.player.render(this.ctx);
     for (let [id, player] of this.otherPlayers.entries()) {
       if (player) player.render(this.ctx);
