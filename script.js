@@ -547,10 +547,28 @@ class Player {
   }
 
   move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
     const game = window.game;
     if (game) {
+      //🔥 新增：玩家與牆壁的碰撞偵測
+      let nextX = this.x + dx;
+      let nextY = this.y + dy;
+
+      for (let w of game.walls) {
+        // 檢查 X 軸移動是否會撞牆
+        if (nextX + this.radius > w.x && nextX - this.radius < w.x + w.w &&
+            this.y + this.radius > w.y && this.y - this.radius < w.y + w.h) {
+          dx = 0; // 撞牆則取消該方向移動
+        }
+        // 檢查 Y 軸移動是否會撞牆
+        if (this.x + this.radius > w.x && this.x - this.radius < w.x + w.w &&
+            nextY + this.radius > w.y && nextY - this.radius < w.y + w.h) {
+          dy = 0; // 撞牆則取消該方向移動
+        }
+      }
+
+      this.x += dx;
+      this.y += dy;
+
       this.x = Math.max(this.radius, Math.min(game.mapWidth - this.radius, this.x));
       this.y = Math.max(this.radius, Math.min(game.mapHeight - this.radius, this.y));
     }
