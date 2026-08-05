@@ -597,9 +597,13 @@ class Game {
 }
 
 class Player {
-  constructor(x, y, color = '#3498db',id='',hp = 10) {
+  constructor(x, y, color = '#3498db', id = '', hp = 10) {
     this.x = x;
     this.y = y;
+    // 🔥 新增：記錄插值用的目標座標，初始值等於出生座標
+    this.targetX = x;
+    this.targetY = y;
+    
     this.radius = 20;
     this.color = color;
     this.directionX = 0;
