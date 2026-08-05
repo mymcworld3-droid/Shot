@@ -466,6 +466,9 @@ class Game {
   }
 
   checkCollisions() {
+    // 🔥 新增：如果還沒有加入遊戲（觀戰中，沒有 this.player），就直接跳過碰撞計算
+    if (!this.player) return;
+
     for (let proj of this.projectiles) {
       if (proj.playerId !== this.playerNetId) {  
         const dist = Math.hypot(proj.x - this.player.x, proj.y - this.player.y);
