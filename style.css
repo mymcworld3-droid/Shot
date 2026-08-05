@@ -29,14 +29,11 @@ html, body {
 }
 
 /* 主頁面樣式 */
-/* 主頁面樣式 */
 #mainMenu {
-  position: relative;  /* ✅ 確保可以蓋在預覽上面 */
+  position: relative; 
   z-index: 1;
-  /* 🔥 修改：加入動態漸層背景，取代原本單調的靜態背景 */
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
+  /* 🔥 修改：將漸層拿掉，改成半透明黑底，讓後面的戰場透出來（數字 0.5 可以自己微調明暗） */
+  background: rgba(0, 0, 0, 0.5); 
   color: white;
 }
 
@@ -149,8 +146,12 @@ html, body {
 }
 
 #gameCanvas {
-  background: #34495e;
-  border: 2px solid #2c3e50;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* 🔥 關鍵：讓戰場永遠在最底層 */
 }
 
 /* 虛擬搖桿樣式 */
