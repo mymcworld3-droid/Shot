@@ -224,7 +224,6 @@ class Game {
   setupEventListeners() {
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
     
-    //🔥 新增：點擊顏色圓圈時的切換邏輯
     document.querySelectorAll('.color-option').forEach(option => {
       option.addEventListener('click', (e) => {
         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
@@ -241,8 +240,8 @@ class Game {
       this.mousePos.y = e.clientY - rect.top;
     });
     document.addEventListener('click', (e) => {
-      //🔥 修改：不再限制 isMobile，只要沒有在滑動搖桿，任何裝置點擊都可以射擊
-      if (this.isRunning && !this.joystick.active) this.shoot();
+      //🔥 修改：加上 this.player 判斷，避免在首頁觀戰時點擊滑鼠會不小心觸發射擊
+      if (this.player && !this.joystick.active) this.shoot();
     });
     this.setupTouchControls();
   }
