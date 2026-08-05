@@ -142,7 +142,7 @@ html, body {
 
 /* 遊戲畫面樣式 */
 #gameScreen {
-  background: #2c3e50;
+  background: transparent; /* 🔥 這裡一定要改成 transparent (透明) */
 }
 
 #gameCanvas {
