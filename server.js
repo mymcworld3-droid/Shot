@@ -338,9 +338,16 @@ function broadcast(message, excludePlayerId = null) {
     console.log('[Server] 廣播訊息：', message);
   }
   const messageStr = JSON.stringify(message);
-  players.forEach((player, playerId) => {
-    if (playerId !== excludePlayerId && player.ws.readyState === WebSocket.OPEN) {
-      player.ws.send(messageStr);
+  
+  // 🔥 修改：原本是 players.forEach，現在改成 wss.clients.forEach
+  // 這樣不管是「已經加入遊戲的玩家」還是「停在首頁觀戰的人」，都能收到即時戰況
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      // 如果有指定不發送的對象 (例如移動指令不用再發還給自己)，則跳過
+      if (excludePlayerId && client._internalId === excludePlayerId) {
+        return;
+      }
+      client.send(messageStr);
     }
   });
 }
