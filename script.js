@@ -311,22 +311,19 @@ class Game {
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
 
-    //🔥 修改：加入碰撞檢測迴圈，避免出生在牆體內
     let spawnX, spawnY;
     let isColliding = true;
     const playerRadius = 20;
 
     while (isColliding) {
-      // 先產生隨機座標
       spawnX = Math.random() * this.mapWidth / 2 + this.mapWidth / 4;
       spawnY = Math.random() * this.mapHeight / 2 + this.mapHeight / 4;
       isColliding = false;
 
-      // 檢查產生的座標是否與任何牆壁重疊 (考慮玩家半徑)
       for (let w of this.walls) {
         if (spawnX + playerRadius > w.x && spawnX - playerRadius < w.x + w.w &&
             spawnY + playerRadius > w.y && spawnY - playerRadius < w.y + w.h) {
-          isColliding = true; // 如果重疊，設為 true 讓迴圈再產生一次
+          isColliding = true; 
           break;
         }
       }
@@ -335,26 +332,24 @@ class Game {
     this.player = new Player(
       spawnX,
       spawnY,
-      this.selectedColor, //🔥 修改：套用玩家選取的顏色
+      this.selectedColor, 
       this.playerName
     );
 
     this.killCounts.clear();
     this.projectiles = [];
-    this.otherPlayers.clear();
-    this.isRunning = true;
+    //🔥 修改：移除 this.otherPlayers.clear()，確保加入瞬間不會看到場上的人閃爍消失
+    //🔥 修改：移除 this.isRunning = true 與 this.gameLoop()，因為迴圈已經在背景執行了
 
-    // 告知伺服器我來了
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
         displayName: this.playerName,
         x: this.player.x,
         y: this.player.y,
-        color: this.selectedColor //🔥 新增：把選好的顏色傳給伺服器
+        color: this.selectedColor
       }));
     }
-    this.gameLoop();
   }
 
   gameLoop() {
