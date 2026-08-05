@@ -591,6 +591,7 @@ class Game {
       this.ctx.fillText(msg.text, 20, 30 + index * 20);
     });
   }
+}
 
 class Player {
   constructor(x, y, color = '#3498db',id='',hp = 10) {
