@@ -252,6 +252,7 @@ class Game {
     let touchId = null;
 
     document.addEventListener('touchstart', (e) => {
+      if (!this.player) return; //🔥 新增：如果還沒開始遊戲，不觸發虛擬搖桿
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         touchId = touch.identifier;
@@ -282,7 +283,7 @@ class Game {
           touchId = null;
           knob.style.transform = 'translate(-50%, -50%)';
           joystick.style.display = 'none';
-          if (this.isRunning) this.shoot();
+          if (this.player) this.shoot(); //🔥 修改：確保有玩家實體才能射擊
           break;
         }
       }
