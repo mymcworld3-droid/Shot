@@ -350,7 +350,7 @@ setInterval(() => {
     const proj = projectiles[i];
     proj.bounces = proj.bounces || 0;
 
-    //🔥 新增：伺服器端的 X 軸移動與反彈
+    // 伺服器端的 X 軸移動與反彈 (包含牆壁與世界邊緣)
     proj.x += proj.directionX * proj.speed;
     let hitX = false;
     for (const w of walls) {
@@ -358,13 +358,15 @@ setInterval(() => {
         hitX = true; break;
       }
     }
+    if (proj.x < 0 || proj.x > MAP_WIDTH) hitX = true;
+
     if (hitX) {
       proj.directionX *= -1;
       proj.x += proj.directionX * proj.speed * 2;
       proj.bounces++;
     }
 
-    //🔥 新增：伺服器端的 Y 軸移動與反彈
+    // 伺服器端的 Y 軸移動與反彈 (包含牆壁與世界邊緣)
     proj.y += proj.directionY * proj.speed;
     let hitY = false;
     for (const w of walls) {
@@ -372,14 +374,16 @@ setInterval(() => {
         hitY = true; break;
       }
     }
+    if (proj.y < 0 || proj.y > MAP_HEIGHT) hitY = true;
+
     if (hitY) {
       proj.directionY *= -1;
       proj.y += proj.directionY * proj.speed * 2;
       proj.bounces++;
     }
 
-    //🔥 修改：反彈超過 2 次才銷毀
-    if (proj.x < 0 || proj.x > MAP_WIDTH || proj.y < 0 || proj.y > MAP_HEIGHT || proj.bounces > 2) {
+    // 修改：現在只有反彈超過 2 次才會銷毀
+    if (proj.bounces > 2) {
       projectiles.splice(i, 1);
       broadcast({
         type: 'projectileDestroyed',
@@ -395,7 +399,6 @@ setInterval(() => {
     });
   }
 }, 50);
-
 setInterval(() => {
   const now = Date.now();
   players.forEach((p) => {
