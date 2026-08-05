@@ -52,6 +52,7 @@ class Game {
     this.setupEventListeners();
     this.initSocket();
     this.initTips(); 
+    this.gameLoop(); //🔥 新增：初始化完成後直接啟動畫面的渲染迴圈
   }
   initTips() {                      // ✅ 新增方法
     const tips = [
