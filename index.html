@@ -7,6 +7,9 @@
   <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+  <!-- ✅ 將 canvas 拉出來，作為永遠的背景 -->
+  <canvas id="gameCanvas"></canvas>
+
   <!-- 主頁面 -->
   <div id="mainMenu" class="screen">
     <div class="menu-container">
@@ -24,17 +27,15 @@
       <button id="startBtn" class="start-button">開始遊戲</button>
     </div>
   </div>
-  <!-- 遊戲畫面 -->
+  <!-- 遊戲畫面 (現在只剩下虛擬搖桿等 UI) -->
   <div id="gameScreen" class="screen hidden">
-    <canvas id="gameCanvas"></canvas>
     <div id="joystick" class="joystick" style="display:none;">
       <div id="joystickKnob" class="joystick-knob"></div>
     </div>
   </div>
 
-  <!-- ✅ 提示盒放在 body 裡，固定右上角 -->
+  <!-- 提示盒 -->
   <div id="tip-box"></div>
 
-  <!-- ✅ 路徑要對：若你的檔名是 main.js 就改成 main.js -->
   <script src="script.js"></script>
 </body>
