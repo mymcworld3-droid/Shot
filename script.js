@@ -119,11 +119,11 @@ class Game {
         }
         break;
       case 'playerUpdate':
-        // ✅ 這裡之前貼成伺服器碼了，改回客戶端更新
         if (data.player.id !== this.playerNetId && this.otherPlayers.has(data.player.id)) {
           const p = this.otherPlayers.get(data.player.id);
-          p.x = data.player.x;
-          p.y = data.player.y;
+          // 🔥 修改：不要直接改變實體座標，而是告訴他「你接下來該往哪裡平滑移動」
+          p.targetX = data.player.x;
+          p.targetY = data.player.y;
           p.directionX = data.player.directionX;
           p.directionY = data.player.directionY;
         }
