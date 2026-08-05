@@ -304,7 +304,7 @@ class Game {
     }
   }
 
-  startGame() {
+ startGame() {
     const input = document.getElementById('playerIdInput');
     const rawId = input ? input.value : '';
     this.playerName = rawId.trim() !== '' ? rawId : Math.random().toString(36).substr(2, 9);
@@ -312,9 +312,30 @@ class Game {
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
 
+    //🔥 修改：加入碰撞檢測迴圈，避免出生在牆體內
+    let spawnX, spawnY;
+    let isColliding = true;
+    const playerRadius = 20;
+
+    while (isColliding) {
+      // 先產生隨機座標
+      spawnX = Math.random() * this.mapWidth / 2 + this.mapWidth / 4;
+      spawnY = Math.random() * this.mapHeight / 2 + this.mapHeight / 4;
+      isColliding = false;
+
+      // 檢查產生的座標是否與任何牆壁重疊 (考慮玩家半徑)
+      for (let w of this.walls) {
+        if (spawnX + playerRadius > w.x && spawnX - playerRadius < w.x + w.w &&
+            spawnY + playerRadius > w.y && spawnY - playerRadius < w.y + w.h) {
+          isColliding = true; // 如果重疊，設為 true 讓迴圈再產生一次
+          break;
+        }
+      }
+    }
+
     this.player = new Player(
-      Math.random() * this.mapWidth / 2 + this.mapWidth / 4,
-      Math.random() * this.mapHeight / 2 + this.mapHeight / 4,
+      spawnX,
+      spawnY,
       this.selectedColor, //🔥 修改：套用玩家選取的顏色
       this.playerName
     );
