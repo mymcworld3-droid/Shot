@@ -416,7 +416,26 @@ class Game {
     }
   }
 
-  updateOtherPlayers() {}
+  updateOtherPlayers() {
+    // 🔥 新增：利用線性插值 (Lerp) 讓其他玩家的移動變平滑
+    for (let [id, p] of this.otherPlayers.entries()) {
+      if (p.targetX !== undefined && p.targetY !== undefined) {
+        const dx = p.targetX - p.x;
+        const dy = p.targetY - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // 防呆機制：如果距離太遠 (大於100像素，例如剛重生或延遲太大)，就直接瞬移過去，避免畫面出現「飛過去」的奇葩現象
+        if (dist > 100) {
+          p.x = p.targetX;
+          p.y = p.targetY;
+        } else {
+          // 平滑靠近目標點 (0.3 是平滑係數，越小越平滑但會越慢，0.2 ~ 0.4 通常是最佳手感)
+          p.x += dx * 0.3;
+          p.y += dy * 0.3;
+        }
+      }
+    }
+  }
 
   updateProjectiles() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
