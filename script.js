@@ -15,11 +15,9 @@ class Game {
     this.playerNetId = null;  
     this.projectiles = [];
     
-    //🔥 修改：縮小地圖尺寸
     this.mapWidth = 1200;
     this.mapHeight = 1200;
     
-    //🔥 新增：加入與伺服器相同的牆壁資料
     this.walls = [
       { x: 150, y: 150, w: 200, h: 50 },
       { x: 850, y: 150, w: 200, h: 50 },
@@ -31,7 +29,7 @@ class Game {
     ];
 
     this.killFeed = []; 
-    this.isRunning = false;
+    this.isRunning = true; //🔥 修改：一開始就設為 true，讓首頁持續渲染戰場
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.socket = null;
     this.gridSize = 50; 
