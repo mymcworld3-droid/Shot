@@ -541,23 +541,36 @@ class Game {
   }
 
   render() {
-    const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
-    const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
-    // 畫「外框」→ 畫整個畫布（畫面背景）
-    this.ctx.fillStyle = '#34495e'; // 外框色（畫布整體）
+    //🔥 修改：判定焦點，自己 > 場上其他任一玩家 > 地圖正中心
+    let focusX = this.mapWidth / 2;
+    let focusY = this.mapHeight / 2;
+
+    if (this.player) {
+      focusX = this.player.x;
+      focusY = this.player.y;
+    } else if (this.otherPlayers.size > 0) {
+      // 抓取 Map 中的第一個玩家當作觀戰焦點
+      const firstPlayer = this.otherPlayers.values().next().value;
+      focusX = firstPlayer.x;
+      focusY = firstPlayer.y;
+    }
+
+    const camX = focusX - this.canvas.width / 2;
+    const camY = focusY - this.canvas.height / 2;
+
+    this.ctx.fillStyle = '#34495e'; 
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.ctx.translate(-camX, -camY);
-    // 畫「地圖」→ 地圖範圍內（置中玩家）
-    this.ctx.fillStyle = '#2c3e50'; // 地圖內部顏色
+    
+    this.ctx.fillStyle = '#2c3e50'; 
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
 
-    //🔥 新增：畫出牆壁
-    this.ctx.fillStyle = '#7f8c8d'; // 牆壁填充顏色
+    this.ctx.fillStyle = '#7f8c8d'; 
     for (let w of this.walls) {
       this.ctx.fillRect(w.x, w.y, w.w, w.h);
-      this.ctx.strokeStyle = '#1a252f'; // 牆壁邊框顏色
+      this.ctx.strokeStyle = '#1a252f'; 
       this.ctx.lineWidth = 3;
       this.ctx.strokeRect(w.x, w.y, w.w, w.h);
     }
@@ -568,17 +581,16 @@ class Game {
     }
     this.projectiles.forEach(p => p.render(this.ctx));
     this.ctx.restore();
-    // 畫擊殺訊息
+    
     this.ctx.fillStyle = 'white';
     this.ctx.font = '16px Arial';
     this.ctx.textAlign = 'left';
     let now = Date.now();
-    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); // 只留5秒
+    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); 
     this.killFeed.forEach((msg, index) => {
       this.ctx.fillText(msg.text, 20, 30 + index * 20);
     });
   }
-}
 
 class Player {
   constructor(x, y, color = '#3498db',id='',hp = 10) {
