@@ -489,10 +489,10 @@ class Game {
 
   playerHit() {
     if (this.playerNetId) this.killCounts.set(this.playerNetId, 0);
-    this.isRunning = false;
+    //🔥 修改：不再設定 this.isRunning = false，讓迴圈繼續運作以維持觀戰畫面
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
-    this.otherPlayers.clear();
+    //🔥 修改：不再執行 this.otherPlayers.clear()，讓你可以繼續在畫面上看到擊殺你的人
     this.projectiles = [];
     this.player = null;
   }
