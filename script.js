@@ -15,11 +15,9 @@ class Game {
     this.playerNetId = null;  
     this.projectiles = [];
     
-    //🔥 修改：縮小地圖尺寸
     this.mapWidth = 1200;
     this.mapHeight = 1200;
     
-    //🔥 新增：加入與伺服器相同的牆壁資料
     this.walls = [
       { x: 150, y: 150, w: 200, h: 50 },
       { x: 850, y: 150, w: 200, h: 50 },
@@ -31,7 +29,7 @@ class Game {
     ];
 
     this.killFeed = []; 
-    this.isRunning = false;
+    this.isRunning = true; //🔥 修改：一開始就設為 true，讓首頁持續渲染戰場
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.socket = null;
     this.gridSize = 50; 
@@ -54,6 +52,7 @@ class Game {
     this.setupEventListeners();
     this.initSocket();
     this.initTips(); 
+    this.gameLoop(); //🔥 新增：初始化完成後直接啟動畫面的渲染迴圈
   }
   initTips() {                      // ✅ 新增方法
     const tips = [
@@ -120,11 +119,11 @@ class Game {
         }
         break;
       case 'playerUpdate':
-        // ✅ 這裡之前貼成伺服器碼了，改回客戶端更新
         if (data.player.id !== this.playerNetId && this.otherPlayers.has(data.player.id)) {
           const p = this.otherPlayers.get(data.player.id);
-          p.x = data.player.x;
-          p.y = data.player.y;
+          // 🔥 修改：不要直接改變實體座標，而是告訴他「你接下來該往哪裡平滑移動」
+          p.targetX = data.player.x;
+          p.targetY = data.player.y;
           p.directionX = data.player.directionX;
           p.directionY = data.player.directionY;
         }
@@ -225,7 +224,6 @@ class Game {
   setupEventListeners() {
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
     
-    //🔥 新增：點擊顏色圓圈時的切換邏輯
     document.querySelectorAll('.color-option').forEach(option => {
       option.addEventListener('click', (e) => {
         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
@@ -242,8 +240,8 @@ class Game {
       this.mousePos.y = e.clientY - rect.top;
     });
     document.addEventListener('click', (e) => {
-      //🔥 修改：不再限制 isMobile，只要沒有在滑動搖桿，任何裝置點擊都可以射擊
-      if (this.isRunning && !this.joystick.active) this.shoot();
+      //🔥 修改：加上 this.player 判斷，避免在首頁觀戰時點擊滑鼠會不小心觸發射擊
+      if (this.player && !this.joystick.active) this.shoot();
     });
     this.setupTouchControls();
   }
@@ -254,6 +252,7 @@ class Game {
     let touchId = null;
 
     document.addEventListener('touchstart', (e) => {
+      if (!this.player) return; //🔥 新增：如果還沒開始遊戲，不觸發虛擬搖桿
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         touchId = touch.identifier;
@@ -284,7 +283,7 @@ class Game {
           touchId = null;
           knob.style.transform = 'translate(-50%, -50%)';
           joystick.style.display = 'none';
-          if (this.isRunning) this.shoot();
+          if (this.player) this.shoot(); //🔥 修改：確保有玩家實體才能射擊
           break;
         }
       }
@@ -312,22 +311,19 @@ class Game {
     document.getElementById('mainMenu').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
 
-    //🔥 修改：加入碰撞檢測迴圈，避免出生在牆體內
     let spawnX, spawnY;
     let isColliding = true;
     const playerRadius = 20;
 
     while (isColliding) {
-      // 先產生隨機座標
       spawnX = Math.random() * this.mapWidth / 2 + this.mapWidth / 4;
       spawnY = Math.random() * this.mapHeight / 2 + this.mapHeight / 4;
       isColliding = false;
 
-      // 檢查產生的座標是否與任何牆壁重疊 (考慮玩家半徑)
       for (let w of this.walls) {
         if (spawnX + playerRadius > w.x && spawnX - playerRadius < w.x + w.w &&
             spawnY + playerRadius > w.y && spawnY - playerRadius < w.y + w.h) {
-          isColliding = true; // 如果重疊，設為 true 讓迴圈再產生一次
+          isColliding = true; 
           break;
         }
       }
@@ -336,26 +332,24 @@ class Game {
     this.player = new Player(
       spawnX,
       spawnY,
-      this.selectedColor, //🔥 修改：套用玩家選取的顏色
+      this.selectedColor, 
       this.playerName
     );
 
     this.killCounts.clear();
     this.projectiles = [];
-    this.otherPlayers.clear();
-    this.isRunning = true;
+    //🔥 修改：移除 this.otherPlayers.clear()，確保加入瞬間不會看到場上的人閃爍消失
+    //🔥 修改：移除 this.isRunning = true 與 this.gameLoop()，因為迴圈已經在背景執行了
 
-    // 告知伺服器我來了
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
         type: 'playerJoin',
         displayName: this.playerName,
         x: this.player.x,
         y: this.player.y,
-        color: this.selectedColor //🔥 新增：把選好的顏色傳給伺服器
+        color: this.selectedColor
       }));
     }
-    this.gameLoop();
   }
 
   gameLoop() {
@@ -422,7 +416,26 @@ class Game {
     }
   }
 
-  updateOtherPlayers() {}
+  updateOtherPlayers() {
+    // 🔥 新增：利用線性插值 (Lerp) 讓其他玩家的移動變平滑
+    for (let [id, p] of this.otherPlayers.entries()) {
+      if (p.targetX !== undefined && p.targetY !== undefined) {
+        const dx = p.targetX - p.x;
+        const dy = p.targetY - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // 防呆機制：如果距離太遠 (大於100像素，例如剛重生或延遲太大)，就直接瞬移過去，避免畫面出現「飛過去」的奇葩現象
+        if (dist > 100) {
+          p.x = p.targetX;
+          p.y = p.targetY;
+        } else {
+          // 平滑靠近目標點 (0.3 是平滑係數，越小越平滑但會越慢，0.2 ~ 0.4 通常是最佳手感)
+          p.x += dx * 0.3;
+          p.y += dy * 0.3;
+        }
+      }
+    }
+  }
 
   updateProjectiles() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -472,6 +485,9 @@ class Game {
   }
 
   checkCollisions() {
+    // 🔥 新增：如果還沒有加入遊戲（觀戰中，沒有 this.player），就直接跳過碰撞計算
+    if (!this.player) return;
+
     for (let proj of this.projectiles) {
       if (proj.playerId !== this.playerNetId) {  
         const dist = Math.hypot(proj.x - this.player.x, proj.y - this.player.y);
@@ -495,10 +511,10 @@ class Game {
 
   playerHit() {
     if (this.playerNetId) this.killCounts.set(this.playerNetId, 0);
-    this.isRunning = false;
+    //🔥 修改：不再設定 this.isRunning = false，讓迴圈繼續運作以維持觀戰畫面
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
-    this.otherPlayers.clear();
+    //🔥 修改：不再執行 this.otherPlayers.clear()，讓你可以繼續在畫面上看到擊殺你的人
     this.projectiles = [];
     this.player = null;
   }
@@ -547,23 +563,36 @@ class Game {
   }
 
   render() {
-    const camX = this.player ? this.player.x - this.canvas.width / 2 : 0;
-    const camY = this.player ? this.player.y - this.canvas.height / 2 : 0;
-    // 畫「外框」→ 畫整個畫布（畫面背景）
-    this.ctx.fillStyle = '#34495e'; // 外框色（畫布整體）
+    //🔥 修改：判定焦點，自己 > 場上其他任一玩家 > 地圖正中心
+    let focusX = this.mapWidth / 2;
+    let focusY = this.mapHeight / 2;
+
+    if (this.player) {
+      focusX = this.player.x;
+      focusY = this.player.y;
+    } else if (this.otherPlayers.size > 0) {
+      // 抓取 Map 中的第一個玩家當作觀戰焦點
+      const firstPlayer = this.otherPlayers.values().next().value;
+      focusX = firstPlayer.x;
+      focusY = firstPlayer.y;
+    }
+
+    const camX = focusX - this.canvas.width / 2;
+    const camY = focusY - this.canvas.height / 2;
+
+    this.ctx.fillStyle = '#34495e'; 
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.ctx.translate(-camX, -camY);
-    // 畫「地圖」→ 地圖範圍內（置中玩家）
-    this.ctx.fillStyle = '#2c3e50'; // 地圖內部顏色
+    
+    this.ctx.fillStyle = '#2c3e50'; 
     this.ctx.fillRect(0, 0, this.mapWidth, this.mapHeight);
     this.drawGrid();
 
-    //🔥 新增：畫出牆壁
-    this.ctx.fillStyle = '#7f8c8d'; // 牆壁填充顏色
+    this.ctx.fillStyle = '#7f8c8d'; 
     for (let w of this.walls) {
       this.ctx.fillRect(w.x, w.y, w.w, w.h);
-      this.ctx.strokeStyle = '#1a252f'; // 牆壁邊框顏色
+      this.ctx.strokeStyle = '#1a252f'; 
       this.ctx.lineWidth = 3;
       this.ctx.strokeRect(w.x, w.y, w.w, w.h);
     }
@@ -574,12 +603,12 @@ class Game {
     }
     this.projectiles.forEach(p => p.render(this.ctx));
     this.ctx.restore();
-    // 畫擊殺訊息
+    
     this.ctx.fillStyle = 'white';
     this.ctx.font = '16px Arial';
     this.ctx.textAlign = 'left';
     let now = Date.now();
-    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); // 只留5秒
+    this.killFeed = this.killFeed.filter(msg => now - msg.time < 5000); 
     this.killFeed.forEach((msg, index) => {
       this.ctx.fillText(msg.text, 20, 30 + index * 20);
     });
@@ -587,9 +616,13 @@ class Game {
 }
 
 class Player {
-  constructor(x, y, color = '#3498db',id='',hp = 10) {
+  constructor(x, y, color = '#3498db', id = '', hp = 10) {
     this.x = x;
     this.y = y;
+    // 🔥 新增：記錄插值用的目標座標，初始值等於出生座標
+    this.targetX = x;
+    this.targetY = y;
+    
     this.radius = 20;
     this.color = color;
     this.directionX = 0;
